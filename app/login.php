@@ -17,9 +17,6 @@ if (file_exists($languageFile)) {
 $recaptcha_sitekey = trim(getenv('RECAPTCHA_SITEKEY') ?: 'default_site_key');
 $recaptcha_secret  = trim(getenv('RECAPTCHA_SECRET') ?: 'default_secret');
 
-error_log('RECAPTCHA_SITEKEY: ' . $recaptcha_sitekey);
-error_log('RECAPTCHA_SECRET: ' . $recaptcha_secret);
-
 $msg="";
 
 // Funktion zur Ermittlung der ursprünglichen Client-IP
