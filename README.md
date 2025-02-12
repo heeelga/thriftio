@@ -53,7 +53,9 @@ I created this app to track my expenses in an easy, mobile-friendly manner witho
 
 🔍 Responsive UI – Mobile-friendly, intuitive design.
 
-👋 Swipe Functionality – Swipe from month to month with a fingertip
+🌙 Dark Mode - We all can't live without it.
+
+👋 Swipe Functionality – Swipe from month to month with a fingertip.
 
 📋 Backup System – Create backups of user-specific tables and sub-tables.
 
