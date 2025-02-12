@@ -216,28 +216,6 @@ if ($result->num_rows > 0) {
 <body>
 <center>
   <div class="admin-container">
-  
-    <!-- Box 1: Release Notes -->
-    <div class="entry-box">
-      <h3><?php echo $translations['new_release_notes']; ?></h3>
-      <?php
-      if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_notes'])) {
-          $notes = $_POST['release_notes'];
-          file_put_contents('release_notes.txt', $notes);
-          $updateQuery = "UPDATE user SET release_notes_available = TRUE, release_notes_read = FALSE";
-          if ($conn->query($updateQuery) === TRUE) {
-              echo "Release Notes gespeichert und an alle User verteilt!";
-          } else {
-              echo "Fehler beim Aktualisieren der User: " . $conn->error;
-          }
-      }
-      ?>
-      <form method="POST">
-        <textarea name="release_notes" rows="10" cols="50" placeholder='<?php echo $translations['set_release_notes']?>'></textarea>
-        <br><br>
-        <button type="submit" name="save_notes"><?php echo $translations['save']; ?></button>
-      </form>
-    </div>
     
     <!-- Box 2: Benutzerliste -->
     <div class="entry-box">
