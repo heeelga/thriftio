@@ -18,6 +18,8 @@ If you plan to expose this app to the internet, PLEASE secure it behind a revers
 <b>Warning:</b>
 Incorrect login attempts are logged in the database. After 5 failed attempts, the corresponding IP address will be blocked and redirected to Google or another specified site.
 
+If you plan to share this app with your family or friends, please inform them that their IP address and approx. origin will be logged when logging in. 
+
 <h2>Project Goal</h2>
 
 I created this app to track my expenses in an easy, mobile-friendly manner without too many complicated features. I also wanted the app to support inviting family members.
