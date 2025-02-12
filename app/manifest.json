@@ -1,0 +1,20 @@
+{
+  "name": "ThriftIO",
+  "short_name": "ThriftIO",
+  "start_url": "/index.php",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4CAF50",
+  "icons": [
+    {
+      "src": "/images/icon_small.jpg",
+      "sizes": "192x192",
+      "type": "image/jpg"
+    },
+    {
+      "src": "/images/icon_small.jpg",
+      "sizes": "512x512",
+      "type": "image/jpg"
+    }
+  ]
+}
