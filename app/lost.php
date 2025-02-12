@@ -12,10 +12,6 @@ if (file_exists($languageFile)) {
     $translations = json_decode(file_get_contents(__DIR__ . "/languages/de.json"), true);
 }
 
-// reCAPTCHA-Schlüssel aus den Umgebungsvariablen laden und trimmen
-$recaptcha_sitekey = trim(getenv('RECAPTCHA_SITEKEY') ?: 'default_site_key');
-$recaptcha_secret  = trim(getenv('RECAPTCHA_SECRET') ?: 'default_secret');
-
 // Logging: Überprüfe, ob die Schlüssel korrekt geladen wurden
 error_log('RECAPTCHA_SITEKEY: ' . $recaptcha_sitekey);
 error_log('RECAPTCHA_SECRET: ' . $recaptcha_secret);
