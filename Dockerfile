@@ -1,7 +1,7 @@
-# Basis-Image mit PHP und FPM
+# Base image with PHP and FPM
 FROM php:8.2-fpm
 
-# Installiere Systempakete und PHP-Erweiterungen
+# Install system packages and PHP extensions
 RUN apt-get update && apt-get install -y \
     nginx \
     mariadb-client \
@@ -14,37 +14,36 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Anwendung kopieren
+# Copy application files
 WORKDIR /var/www/html
 COPY . /var/www/html
 
-# Nginx-Konfiguration kopieren
+# Copy Nginx configuration
 COPY default.conf /etc/nginx/sites-available/default
 
-# Nginx konfigurieren
+# Configure Nginx
 RUN mkdir -p /etc/nginx/sites-enabled && \
     [ ! -L /etc/nginx/sites-enabled/default ] && \
     ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default || true
 
-# Rechte setzen
+# Set file permissions
 RUN chown -R www-data:www-data /var/www/html
 
-# Erstelle das benötigte Verzeichnis für Backups
+# Create the required directory for backups
 RUN mkdir -p /var/backups/finance && \
     chown -R www-data:www-data /var/backups/finance && \
     chmod -R 755 /var/backups/finance
 
-# Exponiere Port 80 für HTTP
+# Expose port 80 for HTTP
 EXPOSE 80
 
-# Warte-Skript kopieren
+# Copy wait script
 COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
 RUN chmod +x /usr/local/bin/wait-for-it.sh
 
-
-# Start-Skript hinzufügen
+# Add start script
 COPY start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
-# Setze EntryPoint
+# Set entry point
 ENTRYPOINT ["/usr/local/bin/start.sh"]
