@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e
 
-# Warte auf die Datenbank
+# Wait for database
 echo "Waiting for database..."
 /usr/local/bin/wait-for-it.sh db:3306 --timeout=30 --strict -- echo "Database ready."
 
-# Führe setup.php aus, falls vorhanden
+# Run setup.php if file present, then delete
 if [ -f /var/www/html/setup.php ]; then
     echo "Running setup.php..."
     php /var/www/html/setup.php && rm -f /var/www/html/setup.php
@@ -14,7 +14,7 @@ else
     echo "setup.php not found, skipping."
 fi
 
-# Starte Nginx und PHP-FPM
+# Run Nginx and PHP-FPM
 echo "Starting Nginx and PHP-FPM..."
 service nginx start
 php-fpm
