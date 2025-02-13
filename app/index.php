@@ -2424,25 +2424,25 @@ function closeOverlay() {
                 ?>
             </select>
 
-<label for="edit-single-amount"><?php echo $translations['amount'] ?></label>
-<input type="text" id="edit-single-amount" name="amount" required
-       pattern="^\d+([.,]\d{1,2})?$"
-       title="Bitte geben Sie eine Zahl mit maximal zwei Nachkommastellen ein."
-       inputmode="decimal">
-
+            <label for="edit-single-amount"><?php echo $translations['amount'] ?></label>
+            <input type="text" id="edit-single-amount" name="amount" required
+                   pattern="^\d+([.,]\d{1,2})?$"
+                   title="Bitte geben Sie eine Zahl mit maximal zwei Nachkommastellen ein."
+                   inputmode="decimal">
 
             <label for="edit-single-description"><?php echo $translations['description'] ?></label>
             <input type="text" id="edit-single-description" name="description" required>
 
-<label for="edit-single-recurring"><?php echo $translations['regularity'] ?></label>
-<select id="edit-single-recurring" name="recurring" required>
-    <option value="no">Nein</option>
-    <option value="monthly">Monatlich</option>
-    <option value="quarterly">Vierteljährig</option>
-    <option value="semiannually">Halbjährig</option>
-    <option value="annually">Jährlich</option>
-</select>
-
+            <label for="edit-single-recurring"><?php echo $translations['regularity'] ?></label>
+            <select id="edit-single-recurring" name="recurring" required disabled>
+                <option value="no" selected>Nein</option>
+                <option value="monthly">Monatlich</option>
+                <option value="quarterly">Vierteljährig</option>
+                <option value="semiannually">Halbjährig</option>
+                <option value="annually">Jährlich</option>
+            </select>
+            <!-- Verstecktes Feld, damit der Wert "no" beim Absenden übertragen wird -->
+            <input type="hidden" name="recurring" value="no">
 
             <label for="edit-single-entry-month"><?php echo $translations['booking_month'] ?></label>
             <select id="edit-single-entry-month" name="entry_month" required>
