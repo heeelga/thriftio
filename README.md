@@ -100,7 +100,7 @@ The app was originally developed in German, but approximately 70-80% of the cont
 
 <h1>Quick Setup</h1>
 
-1. Clone the project repository.
+1. Download or git clone the project.
 2. Copy the .env-example file by running
 
 
