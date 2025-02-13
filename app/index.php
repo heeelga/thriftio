@@ -2119,7 +2119,6 @@ function closeOverlay() {
                 <option value="main"><?php echo $translations['main']?></option>
                 <?php
                 // Dynamische Liste der Sparkonten
-                //include 'dbconnection.php';
                 $username = $_SESSION['username'];
                 $stmt = $pdo->prepare("SHOW TABLES LIKE ?");
                 $stmt->execute([$username . "_%"]);
@@ -2137,7 +2136,6 @@ function closeOverlay() {
             <select id="target_account" name="target_account" required>
                 <option value="main"><?php echo $translations['main']?></option>
                 <?php
-                // Wiederholte Liste der Sparkonten
                 foreach ($tables as $table) {
                     $accountName = str_replace($username . "_", '', $table);
                     echo "<option value=\"$accountName\">" . htmlspecialchars($accountName) . "</option>";
@@ -2180,13 +2178,12 @@ function closeOverlay() {
             <label for="entry_year-rebooking"><?php echo $translations['booking_year'] ?? 'Booking year:'; ?></label>
             <input type="number" id="entry_year-rebooking" name="entry_year" value="<?= $year ?>" required>
 
-<!-- Betrag im Umbuchungsoverlay -->
-<label for="amount-rebooking"><?php echo $translations['amount'] ?? 'Amount:'; ?></label>
-<input type="text" id="amount-rebooking" name="amount" required
-       pattern="^\d+([.,]\d{1,2})?$"
-       title="Bitte gib eine Zahl mit maximal zwei Nachkommastellen ein."
-       inputmode="decimal">
-
+            <!-- Betrag im Umbuchungsoverlay -->
+            <label for="amount-rebooking"><?php echo $translations['amount'] ?? 'Amount:'; ?></label>
+            <input type="text" id="amount-rebooking" name="amount" required
+                   pattern="^\d+([.,]\d{1,2})?$"
+                   title="Bitte gib eine Zahl mit maximal zwei Nachkommastellen ein."
+                   inputmode="decimal">
 
             <!-- Beschreibung -->
             <label for="description-rebooking"><?php echo $translations['description'] ?? 'Description:'; ?></label>
@@ -2201,6 +2198,7 @@ function closeOverlay() {
   // Beispiel: Der Sprachwert wird aus PHP oder Umgebungsvariablen übernommen
   // Setze hier 'de' (Deutsch) oder 'en' (Englisch)
   var language = 'de'; // Diesen Wert dynamisch via PHP setzen, falls gewünscht
+  // Bestimme den Dezimaltrenner anhand der Sprache
   var decimalSeparator = language === 'de' ? ',' : '.';
 
   const amountRebookingInput = document.getElementById('amount-rebooking');
@@ -2242,6 +2240,15 @@ function closeOverlay() {
       
       this.value = value;
   });
+
+  // Beim Absenden des Formulars wird der Dezimaltrenner von Komma in Punkt umgewandelt,
+  // damit der Server den Wert korrekt als Dezimalzahl interpretiert.
+  const rebookingForm = document.getElementById('rebooking-form');
+  rebookingForm.addEventListener('submit', function(e) {
+      if(language === 'de'){
+          amountRebookingInput.value = amountRebookingInput.value.replace(',', '.');
+      }
+  });
 </script>
 
 
@@ -2276,12 +2283,11 @@ function closeOverlay() {
                 ?>
             </select>
 
-<label for="edit-amount"><?php echo $translations['amount'] ?></label>
-<input type="text" id="edit-amount" name="amount" required
-       pattern="^\d+([.,]\d{1,2})?$"
-       title="Bitte gib eine Zahl mit maximal zwei Nachkommastellen ein."
-       inputmode="decimal">
-
+            <label for="edit-amount"><?php echo $translations['amount'] ?></label>
+            <input type="text" id="edit-amount" name="amount" required
+                   pattern="^\d+([.,]\d{1,2})?$"
+                   title="Bitte gib eine Zahl mit maximal zwei Nachkommastellen ein."
+                   inputmode="decimal">
 
             <label for="edit-description"><?php echo $translations['description']?></label>
             <input type="text" id="edit-description" name="description" required>
@@ -2334,7 +2340,7 @@ function closeOverlay() {
 </div>
 
 <script>
-  // Beispiel: Sprachwert wird aus PHP oder Umgebungsvariablen übernommen.
+  // Sprachwert wird aus PHP oder Umgebungsvariablen übernommen.
   // Hier z. B. 'de' für Deutsch oder 'en' für Englisch.
   var language = 'de'; // Dynamisch setzen, z.B. via PHP: var language = '<?php echo $language; ?>';
   var decimalSeparator = language === 'de' ? ',' : '.';
@@ -2377,6 +2383,15 @@ function closeOverlay() {
       }
       
       this.value = value;
+  });
+
+  // Beim Absenden des Formulars wird der Dezimaltrenner von Komma in Punkt umgewandelt,
+  // damit der Server den Wert korrekt als Dezimalzahl interpretiert.
+  const editRebookingForm = document.getElementById('edit-rebooking-form');
+  editRebookingForm.addEventListener('submit', function(e) {
+      if (language === 'de') {
+          editAmountInput.value = editAmountInput.value.replace(',', '.');
+      }
   });
 </script>
 
@@ -2507,7 +2522,17 @@ function closeOverlay() {
       
       this.value = value;
   });
+
+  // Beim Absenden des Formulars wird der Dezimaltrenner von Komma in Punkt umgewandelt,
+  // damit der Server den Wert korrekt als Dezimalzahl interpretiert.
+  const editSingleRebookingForm = document.getElementById('edit-single-rebooking-form');
+  editSingleRebookingForm.addEventListener('submit', function(e) {
+      if (language === 'de') {
+          editSingleAmountInput.value = editSingleAmountInput.value.replace(',', '.');
+      }
+  });
 </script>
+
 
 
 <script>
