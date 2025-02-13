@@ -115,7 +115,7 @@ function highlightCategory(elementOrCategory) {
 }
 </script>
 
-<!--Edit single entry of rebooking series-->
+<!--Einzelne Umbuchung innerhalb Serie bearbeiten-->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Hilfsfunktion zum Auslesen von URL-Parametern
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 
-<!--Hide edited entry of series-->
+<!--Einzeln bearbeitetes Serienelement ausblenden-->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const hideOverrideButtons = document.querySelectorAll('.hide-override-button');
@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const totalSumElement = document.getElementById('total-sum');
 
-const updateTotalSum = () => {
+ const updateTotalSum = () => {
     let totalSum = 0;
     selectedEntries.forEach(id => {
         const entry = document.querySelector(`.entry-box[data-id="${id}"]`);
@@ -671,9 +671,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const currentViewMonth = parseInt(getQueryParameter("month")) || (new Date().getMonth() + 1);
     const currentViewYear  = parseInt(getQueryParameter("year"))  || (new Date().getFullYear());
 
+    // Funktion zum Formatieren eines Datums in YYYY-MM-DD im lokalen Zeitformat
+    function formatLocalDate(date) {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     // Felder des Overlays initialisieren
     const idField               = document.getElementById('edit-id');
-    const entryTypeField        = document.getElementById('entry-type');   // gleiche ID wie im HTML
+    const entryTypeField        = document.getElementById('entry-type');
     const amountField           = document.getElementById('amount');
     const descriptionField      = document.getElementById('description');
     const recurringField        = document.getElementById('recurring');
@@ -707,19 +715,19 @@ document.addEventListener('DOMContentLoaded', function () {
         repeatUntilYearField.value  = '';
         categoryField.value         = '';
 
-        // Nur für neue Einträge soll das Buchungsdatum automatisch gesetzt werden.
+        // Nur für neue Einträge das Buchungsdatum automatisch setzen
         if (isNew) {
             const today = new Date();
             if (today.getMonth() + 1 === currentViewMonth && today.getFullYear() === currentViewYear) {
                 // Bei aktuellem Monat: heutiges Datum verwenden
-                bookingDateField.value = today.toISOString().split('T')[0];
+                bookingDateField.value = formatLocalDate(today);
             } else {
-                // Andernfalls: 1. des angezeigten Monats verwenden
+                // Andernfalls: 1. Tag des angezeigten Monats verwenden
                 const firstDay = new Date(currentViewYear, currentViewMonth - 1, 1);
-                bookingDateField.value = firstDay.toISOString().split('T')[0];
+                bookingDateField.value = formatLocalDate(firstDay);
             }
         } else {
-            // Beim Bearbeiten wird das Datum aus den geladenen Daten übernommen.
+            // Beim Bearbeiten wird das Datum später aus den geladenen Daten übernommen.
             bookingDateField.value = '';
         }
 
@@ -742,14 +750,18 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleRepeatUntilFields(this.value);
     });
 
-    // Button "Neuen Eintrag" -> Overlay öffnen
-    addButton.addEventListener('click', function () {
-        // Setze neuen Eintragsmodus
+    // Funktion zum Öffnen des Overlays für einen neuen Eintrag
+    function openNewEntryOverlay() {
         overlayForm.dataset.override = 'new';
         resetOverlayFields(true);
         overlayTitle.textContent = 'Neue Bewegung hinzufügen';
         overlayForm.action = 'add_entry.php';
         overlay.style.display = 'flex';
+    }
+
+    // Button "Neuen Eintrag" -> Overlay öffnen
+    addButton.addEventListener('click', function () {
+        openNewEntryOverlay();
     });
 
     // Eintragsdaten via AJAX abrufen
@@ -769,12 +781,10 @@ document.addEventListener('DOMContentLoaded', function () {
         editButtons.forEach(button => {
             button.addEventListener('click', async function () {
                 const entryId = this.dataset.id;
-                // Setze Bearbeitungsmodus
                 overlayForm.dataset.override = 'edit';
                 resetOverlayFields(false);
 
                 try {
-                    // Daten mit Modus "series" laden
                     const entryData = await fetchEntryData(entryId, 'series');
                     if (entryData && typeof entryData.id !== 'undefined') {
                         idField.value               = entryData.id;
@@ -813,12 +823,10 @@ document.addEventListener('DOMContentLoaded', function () {
         editSingleButtons.forEach(button => {
             button.addEventListener('click', async function () {
                 const entryId = this.dataset.id;
-                // Setze Bearbeitungsmodus
                 overlayForm.dataset.override = 'edit';
                 resetOverlayFields(false);
 
                 try {
-                    // Daten mit Modus "single" laden
                     const entryData = await fetchEntryData(entryId, 'single');
                     if (entryData && typeof entryData.id !== 'undefined') {
                         idField.value          = entryData.id;
@@ -826,7 +834,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         descriptionField.value = entryData.description;
                         categoryField.value    = entryData.category || '';
 
-                        // Übernehme den Tag aus dem Serien-Buchungsdatum, verwende aber Monat und Jahr aus dem aktuellen View
                         if (entryData.booking_date) {
                             let seriesDate = new Date(entryData.booking_date);
                             let day = seriesDate.getDate();
@@ -834,7 +841,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             let dayStr = ('0' + day).slice(-2);
                             bookingDateField.value = `${currentViewYear}-${monthStr}-${dayStr}`;
                         } else {
-                            bookingDateField.value = new Date().toISOString().slice(0,10);
+                            bookingDateField.value = formatLocalDate(new Date());
                         }
 
                         if (entryData.type) {
@@ -842,11 +849,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             setEntryType(entryData.type);
                         }
 
-                        // Bei Einzelbearbeitung: recurring deaktivieren
                         recurringField.value    = 'no';
                         recurringField.disabled = true;
 
-                        // (Optional) Falls Du month/year-Werte in weiteren Feldern benötigst:
                         repeatUntilMonthField.value = entryData.entry_month || '';
                         repeatUntilYearField.value  = entryData.entry_year  || '';
 
@@ -894,11 +899,40 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Tastatur-Shortcuts
+    document.addEventListener('keydown', function (event) {
+        const isCtrlOrCmd = event.ctrlKey || event.metaKey;
+        if (event.key === 'Escape') {
+            const openOverlays = document.querySelectorAll('.overlay[style*="display: flex"]');
+            if (openOverlays.length > 0) {
+                openOverlays[0].style.display = 'none';
+            }
+        } else if (isCtrlOrCmd && event.key === 'f') {
+            event.preventDefault();
+            document.getElementById('search-overlay').style.display = 'flex';
+            document.getElementById('search-input').focus();
+        } else if (isCtrlOrCmd && event.key === 'b') {
+            event.preventDefault();
+            openNewEntryOverlay();
+        } else if (isCtrlOrCmd && event.key === 'u') {
+            event.preventDefault();
+            document.getElementById('rebooking-overlay').style.display = 'flex';
+        } else if (isCtrlOrCmd && event.key === 'ArrowRight') {
+            event.preventDefault();
+            navigateMonth(1);
+        } else if (isCtrlOrCmd && event.key === 'ArrowLeft') {
+            event.preventDefault();
+            navigateMonth(-1);
+        }
+    });
+
     // Buttons initialisieren
     initEditButtons();
     initEditSingleButtons();
 });
 </script>
+
+
 
 
 
