@@ -381,27 +381,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const totalSumElement = document.getElementById('total-sum');
 
-    const updateTotalSum = () => {
-        let totalSum = 0;
-        selectedEntries.forEach(id => {
-            const entry = document.querySelector(`.entry-box[data-id="${id}"]`);
-            if (entry) {
-                const amount = parseFloat(entry.dataset.amount);
-                const type = entry.dataset.type; // "income" oder "expense"
-                if (!isNaN(amount)) {
+const updateTotalSum = () => {
+    let totalSum = 0;
+    selectedEntries.forEach(id => {
+        const entry = document.querySelector(`.entry-box[data-id="${id}"]`);
+        if (entry) {
+            const amount = parseFloat(entry.dataset.amount);
+            // Standardmäßig wird type (income/expense) verwendet
+            const type = entry.dataset.type; 
+            // Prüfe, ob es sich um eine Umbuchung handelt
+            const rebooking = entry.dataset.rebooking;
+            if (!isNaN(amount)) {
+                if (rebooking) {
+                    // Umbuchungen: "from" (VON) werden positiv gezählt, "to" (ZU) negativ
+                    totalSum += (rebooking === 'from' ? amount : -amount);
+                } else {
+                    // normale Einträge: income positiv, expense negativ
                     totalSum += (type === 'income' ? amount : -amount);
                 }
             }
-        });
-        totalSumElement.textContent = totalSum.toFixed(2) + ' €';
-
-        const totalSumContainer = document.getElementById('total-sum-container');
-        if (selectedEntries.size > 0) {
-            totalSumContainer.style.display = 'block';
-        } else {
-            totalSumContainer.style.display = 'none';
         }
-    };
+    });
+    totalSumElement.textContent = totalSum.toFixed(2) + ' €';
+
+    const totalSumContainer = document.getElementById('total-sum-container');
+    totalSumContainer.style.display = selectedEntries.size > 0 ? 'block' : 'none';
+};
+
 
     // Funktion: Bulk-Mode starten
     const startBulkMode = () => {
