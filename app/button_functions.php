@@ -115,9 +115,18 @@ function highlightCategory(elementOrCategory) {
 }
 </script>
 
-<!--Einzelne Umbuchung innerhalb Serie bearbeiten-->
+<!--Edit single entry of rebooking series-->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Hilfsfunktion zum Auslesen von URL-Parametern
+    function getQueryParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+    // Verwende die URL-Parameter "month" und "year", falls vorhanden, ansonsten Fallback auf Systemdatum
+    const currentViewMonth = parseInt(getQueryParameter("month")) || (new Date().getMonth() + 1);
+    const currentViewYear  = parseInt(getQueryParameter("year"))  || (new Date().getFullYear());
+
     const editSingleRebookingButtons = document.querySelectorAll('.edit-single-rebooking-button');
 
     editSingleRebookingButtons.forEach(button => {
@@ -143,8 +152,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById("edit-single-target-account").value = entryData.target_account || "main";
                 document.getElementById("edit-single-amount").value = entryData.amount || "";
                 document.getElementById("edit-single-description").value = entryData.description || "";
-                document.getElementById("edit-single-entry-month").value = entryData.entry_month || "";
-                document.getElementById("edit-single-entry-year").value = entryData.entry_year || "";
+                
+                // Überschreibe die Felder für Umbuchungsmonat und Umbuchungsjahr
+                // Mit den in der URL ausgewählten Werten (currentViewMonth und currentViewYear)
+                document.getElementById("edit-single-entry-month").value = currentViewMonth;
+                document.getElementById("edit-single-entry-year").value = currentViewYear;
+
+                // Falls es ein Wiederholungsfeld gibt, setze es auf "nein" und sperre es:
+                const rebookingRecurringField = document.getElementById("edit-single-rebooking-recurring");
+                if(rebookingRecurringField){
+                    rebookingRecurringField.value = "no";
+                    rebookingRecurringField.disabled = true;
+                }
             } catch (error) {
                 console.error("Fehler beim Laden der Umbuchungsdaten:", error);
                 alert("Fehler beim Laden der Umbuchungsdaten.");
@@ -154,7 +173,8 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<!--Einzeln bearbeitetes Serienelement ausblenden-->
+
+<!--Hide edited entry of series-->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const hideOverrideButtons = document.querySelectorAll('.hide-override-button');
