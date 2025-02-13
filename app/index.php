@@ -696,10 +696,17 @@ foreach ($finalEntries as $row) {
 
     $amount = number_format((float)$row['amount'], 2, ',', '.');
 
+    // Neues Data-Attribut für Umbuchung: Bei Umbuchungen wird "from" oder "to" gesetzt.
+    $dataRebooking = '';
+    if ($row['rebooking_id'] > 0) {
+        $dataRebooking = ($row['type'] === 'expense') ? 'to' : 'from';
+    }
+
     echo "<div class='entry-box $entryClass' 
             data-id='" . $row['id'] . "' 
             data-type='" . ($row['rebooking_id'] > 0 ? 'rebooking' : $row['type']) . "' 
-            data-amount='" . $row['amount'] . "'>";
+            data-amount='" . $row['amount'] . "'
+            data-rebooking='" . $dataRebooking . "'>";
 
     // Dynamisches Symbol für wiederkehrende Einträge
     if ($row['recurring'] !== 'no') {
@@ -798,7 +805,7 @@ foreach ($finalEntries as $row) {
             echo "ID: " . htmlspecialchars($row['id']);
         echo "</div>";
 
-        // Aktionen und Checkbox nur, wenn es kein "Übertrag" ist
+        // Aktionen und Checkbox nur, wenn es kein 'Übertrag' ist
         if ($row['description'] !== $translations['carryover']) {
             echo "<div class='entry-actions'>";
                 // Buttons holen
@@ -853,6 +860,7 @@ foreach ($finalEntries as $row) {
     echo "</div>"; // Ende des Inhalts-Wrappers
     echo "</div>"; // Ende der Eintragsbox
 }
+
 
 
 // -----------------------------------------------------------
