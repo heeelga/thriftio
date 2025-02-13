@@ -695,21 +695,36 @@ document.addEventListener('DOMContentLoaded', function () {
         edit_single_entry_title: 'Einzelnen Serieneintrag bearbeiten',
     };
 
-    // Funktion: Felder zurücksetzen (Standardwerte für "Neuen Eintrag")
-    function resetOverlayFields() {
+    // Funktion: Felder zurücksetzen
+    // Parameter isNew gibt an, ob es sich um einen neuen Eintrag handelt (true) oder um einen Bearbeitungsfall (false)
+    function resetOverlayFields(isNew) {
         idField.value               = '';
-        entryTypeField.value        = 'expense';   // Standard: Ausgabe
+        entryTypeField.value        = 'expense';
         amountField.value           = '';
         descriptionField.value      = '';
         recurringField.value        = 'no';
         repeatUntilMonthField.value = '';
         repeatUntilYearField.value  = '';
         categoryField.value         = '';
-        bookingDateField.value      = ''; // Datumsfeld leeren
 
-        // Overlay-UI anpassen
+        // Nur für neue Einträge soll das Buchungsdatum automatisch gesetzt werden.
+        if (isNew) {
+            const today = new Date();
+            if (today.getMonth() + 1 === currentViewMonth && today.getFullYear() === currentViewYear) {
+                // Bei aktuellem Monat: heutiges Datum verwenden
+                bookingDateField.value = today.toISOString().split('T')[0];
+            } else {
+                // Andernfalls: 1. des angezeigten Monats verwenden
+                const firstDay = new Date(currentViewYear, currentViewMonth - 1, 1);
+                bookingDateField.value = firstDay.toISOString().split('T')[0];
+            }
+        } else {
+            // Beim Bearbeiten wird das Datum aus den geladenen Daten übernommen.
+            bookingDateField.value = '';
+        }
+
         toggleRepeatUntilFields('no'); 
-        setEntryType('expense'); // Button-Auswahl auf "expense" setzen (vorausgesetzt, diese Funktion ist definiert)
+        setEntryType('expense'); // Annahme: diese Funktion ist extern definiert
         recurringField.disabled = false;
     }
 
@@ -729,10 +744,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Button "Neuen Eintrag" -> Overlay öffnen
     addButton.addEventListener('click', function () {
-        resetOverlayFields();
+        // Setze neuen Eintragsmodus
+        overlayForm.dataset.override = 'new';
+        resetOverlayFields(true);
         overlayTitle.textContent = 'Neue Bewegung hinzufügen';
         overlayForm.action = 'add_entry.php';
-        overlayForm.dataset.override = '0';
         overlay.style.display = 'flex';
     });
 
@@ -753,7 +769,9 @@ document.addEventListener('DOMContentLoaded', function () {
         editButtons.forEach(button => {
             button.addEventListener('click', async function () {
                 const entryId = this.dataset.id;
-                resetOverlayFields();
+                // Setze Bearbeitungsmodus
+                overlayForm.dataset.override = 'edit';
+                resetOverlayFields(false);
 
                 try {
                     // Daten mit Modus "series" laden
@@ -777,7 +795,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         overlayTitle.textContent = translations.edit_movement_title;
                         overlayForm.action       = 'edit_entry.php';
-                        overlayForm.dataset.override = '0';
                         overlay.style.display = 'flex';
                     } else {
                         alert('Fehler: Eintragsdaten konnten nicht geladen werden.');
@@ -796,7 +813,9 @@ document.addEventListener('DOMContentLoaded', function () {
         editSingleButtons.forEach(button => {
             button.addEventListener('click', async function () {
                 const entryId = this.dataset.id;
-                resetOverlayFields();
+                // Setze Bearbeitungsmodus
+                overlayForm.dataset.override = 'edit';
+                resetOverlayFields(false);
 
                 try {
                     // Daten mit Modus "single" laden
@@ -807,8 +826,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         descriptionField.value = entryData.description;
                         categoryField.value    = entryData.category || '';
 
-                        // Hier setzen wir das Buchungsdatum so, dass der Tag aus dem Serien-Buchungsdatum
-                        // übernommen wird, aber Monat und Jahr aus den URL-Parametern (aktueller View) verwendet werden.
+                        // Übernehme den Tag aus dem Serien-Buchungsdatum, verwende aber Monat und Jahr aus dem aktuellen View
                         if (entryData.booking_date) {
                             let seriesDate = new Date(entryData.booking_date);
                             let day = seriesDate.getDate();
@@ -834,7 +852,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         overlayTitle.textContent  = translations.edit_single_entry_title;
                         overlayForm.action        = 'edit_entry.php';
-                        overlayForm.dataset.override = '1';
                         overlay.style.display = 'flex';
                     } else {
                         alert('Fehler: Eintragsdaten konnten nicht geladen werden.');
@@ -851,7 +868,7 @@ document.addEventListener('DOMContentLoaded', function () {
     overlayForm.addEventListener('submit', async function (event) {
         event.preventDefault();
         const formData = new FormData(overlayForm);
-        formData.append('override', overlayForm.dataset.override || '0');
+        formData.append('override', overlayForm.dataset.override || 'new');
 
         try {
             const response = await fetch(overlayForm.action, {
@@ -882,6 +899,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initEditSingleButtons();
 });
 </script>
+
 
 
 
