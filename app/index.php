@@ -31,11 +31,6 @@ if (!function_exists('getDisplayBookingDate')) {
     }
 }
 
-// Logging
-//$logMessage = "LANGUAGE set to: " . $language;
-//error_log($logMessage);
-
-
 // Funktion zur Überprüfung/Erstellung der Tabelle
 function ensureUserTableExists($username, $conn) {
     $tableName = preg_replace('/[^a-zA-Z0-9_]/', '', $username); // Tabellennamen validieren
@@ -475,6 +470,11 @@ function calculateAndInsertCarryover($conn, $username, $m, $y, $translations) {
     $carryDescrEN = "Carryover from last month";
     $carryDescription = ($translations['carryover'] ?? $carryDescrDE);
 
+    // Für die Speicherung nur noch den absoluten Betrag verwenden
+    $finalAmount = abs($monthSum);
+    // Dieses Flag steuert, ob es 'income' oder 'expense' wird
+    $signParam   = ($monthSum >= 0) ? 1 : -1;
+
     // Prüfen, ob im Folgemonat bereits ein Übertragseintrag existiert:
     $checkStmt = $conn->prepare("
         SELECT id
@@ -492,10 +492,12 @@ function calculateAndInsertCarryover($conn, $username, $m, $y, $translations) {
         $row = $checkResult->fetch_assoc();
         $updateStmt = $conn->prepare("
             UPDATE `$username`
-            SET amount = ?, type = IF(? >= 0, 'income', 'expense'), recurring = 'no'
+            SET amount = ?,
+                type   = IF(? >= 0, 'income', 'expense'),
+                recurring = 'no'
             WHERE id = ?
         ");
-        $updateStmt->bind_param("dii", $monthSum, $monthSum, $row['id']);
+        $updateStmt->bind_param("dii", $finalAmount, $signParam, $row['id']);
         $updateStmt->execute();
         $updateStmt->close();
     } else {
@@ -505,7 +507,7 @@ function calculateAndInsertCarryover($conn, $username, $m, $y, $translations) {
             (description, amount, type, recurring, entry_month, entry_year)
             VALUES (?, ?, IF(? >= 0, 'income', 'expense'), 'no', ?, ?)
         ");
-        $insertStmt->bind_param("sdiii", $carryDescription, $monthSum, $monthSum, $nM, $nY);
+        $insertStmt->bind_param("sdiii", $carryDescription, $finalAmount, $signParam, $nM, $nY);
         $insertStmt->execute();
         $insertStmt->close();
     }
@@ -532,7 +534,6 @@ if ($monthDiff > 0) {
     }
 }
 
-
 // -----------------------------------------------------------
 // 3) NUN DIE NORMALE LOGIK, DIE DU BEREITS HAST
 // -----------------------------------------------------------
@@ -552,6 +553,7 @@ while ($row = $resultOverrides->fetch_assoc()) {
     $overrides[$row['override_id']] = $row; // Nach override_id indexieren
 }
 $stmtOverrides->close();
+
 
 
 // Abfrage der Serien- und einmaligen Einträge (ohne Overrides und ausgeblendete Einträge)
