@@ -39,6 +39,8 @@ I created this app to track my expenses in an easy, mobile-friendly manner witho
 
 📈 Graphs for savings accounts – See your money growing (hopefully) over time
 
+🖥️ Calculate sums - Select multiple entries via long pressing on it
+
 💰 Remaining Balance Calculation – Automatically update the remaining monthly balance.
 
 🛠 Edit/Delete Entries – Modify or remove individual transactions, even in recurring series.
