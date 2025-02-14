@@ -426,60 +426,60 @@ document.addEventListener('DOMContentLoaded', () => {
         totalSumContainer.style.display = 'none';
     };
 
-    // Funktion: Alle ausgewählten Einträge ausblenden
-    const bulkHide = () => {
-        if (selectedEntries.size === 0) {
-            alert('Bitte wähle mindestens einen Eintrag aus.');
+// Funktion: Alle ausgewählten Einträge ausblenden
+const bulkHide = () => {
+    if (selectedEntries.size === 0) {
+        alert(translations.please_select_entry);
+        return;
+    }
+
+    const ids = Array.from(selectedEntries);
+    fetch('bulk_hide_entries.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+    })
+    .then(response => response.json())
+    .then((result) => {
+        if (!result.success) {
+            alert(result.message || translations.error_occurred);
             return;
         }
-
-        const ids = Array.from(selectedEntries);
-        fetch('bulk_hide_entries.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ids }),
-        })
-        .then(response => response.json())
-        .then((result) => {
-            if (!result.success) {
-                alert(result.message || 'Ein Fehler ist aufgetreten.');
-                return;
+        entries.forEach(entry => {
+            if (selectedEntries.has(entry.dataset.id)) {
+                entry.remove();
             }
-            entries.forEach(entry => {
-                if (selectedEntries.has(entry.dataset.id)) {
-                    entry.remove();
-                }
-            });
-            cancelBulkMode();
-        })
-        .catch(error => alert('Ein Fehler ist aufgetreten: ' + error.message));
-    };
+        });
+        cancelBulkMode();
+    })
+    .catch(error => alert(translations.error_occurred_prefix + error.message));
+};
 
-    // Funktion: Alle ausgewählten Einträge löschen
-    const bulkDelete = () => {
-        if (selectedEntries.size === 0) {
-            alert('Bitte wähle mindestens einen Eintrag aus.');
+// Funktion: Alle ausgewählten Einträge löschen
+const bulkDelete = () => {
+    if (selectedEntries.size === 0) {
+        alert(translations.please_select_entry);
+        return;
+    }
+    if (!confirm(translations.confirm_delete_entries)) return;
+
+    const ids = Array.from(selectedEntries);
+    fetch('bulk_delete_entries.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (!result.success) {
+            alert(result.message || translations.error_occurred);
             return;
         }
-        if (!confirm('Möchten Sie die ausgewählten Einträge wirklich löschen?')) return;
-
-        const ids = Array.from(selectedEntries);
-        fetch('bulk_delete_entries.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ids }),
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (!result.success) {
-                alert(result.message || 'Ein Fehler ist aufgetreten.');
-                return;
-            }
-            alert(result.message || 'Die Einträge wurden erfolgreich gelöscht.');
-            window.location.reload();
-        })
-        .catch(error => alert('Ein Fehler ist aufgetreten: ' + error.message));
-    };
+        alert(result.message || translations.entries_deleted_success);
+        window.location.reload();
+    })
+    .catch(error => alert(translations.error_occurred_prefix + error.message));
+};
 
     // Event-Listener für die einzelnen Einträge
     entries.forEach(entry => {
