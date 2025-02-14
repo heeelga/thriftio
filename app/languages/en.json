@@ -152,5 +152,10 @@
   "everyone_invited": "All users have already been invited!",
   "like_2025": "e.g.2025",
   "error_loading_entry": "Error: Entry details could not be loaded.",
-  "error_loading_entry_console": "Error while trying to fetch data:"
+  "error_loading_entry_console": "Error while trying to fetch data:",
+  "please_select_entry": "Please select at least one entry.",
+  "error_occurred": "An error occurred.",
+  "error_occurred_prefix": "An error occurred: ",
+  "confirm_delete_entries": "Do you really want to delete the selected entries?",
+  "entries_deleted_success": "The entries have been successfully deleted."
 }
