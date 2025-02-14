@@ -151,5 +151,10 @@
   "everyone_invited": "Es wurden bereits alle User eingeladen.",
   "like_2025": "z.B.2025",
   "error_loading_entry": "Fehler: Eintragsdaten konnten nicht geladen werden.",
-  "error_loading_entry_console": "Fehler beim Laden der Eintragsdaten:"
+  "error_loading_entry_console": "Fehler beim Laden der Eintragsdaten:",
+  "please_select_entry": "Bitte wähle mindestens einen Eintrag aus.",
+  "error_occurred": "Ein Fehler ist aufgetreten.",
+  "error_occurred_prefix": "Ein Fehler ist aufgetreten: ",
+  "confirm_delete_entries": "Möchten Sie die ausgewählten Einträge wirklich löschen?",
+  "entries_deleted_success": "Die Einträge wurden erfolgreich gelöscht."
 }
