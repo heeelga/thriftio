@@ -150,5 +150,7 @@
   "bulk_delete_success": "The entries were successfully deleted.",
   "bulk_delete_error_details": "An error occurred: {error}",
   "everyone_invited": "All users have already been invited!",
-  "like_2025": "e.g.2025"
+  "like_2025": "e.g.2025",
+  "error_loading_entry": "Error: Entry details could not be loaded.",
+  "error_loading_entry_console": "Error while trying to fetch data:"
 }
