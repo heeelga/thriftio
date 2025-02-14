@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
         totalSumContainer.style.display = 'none';
     };
 
-// Funktion: Alle ausgewählten Einträge ausblenden
+ // Funktion: Alle ausgewählten Einträge ausblenden
 const bulkHide = () => {
     if (selectedEntries.size === 0) {
         alert(translations.please_select_entry);
@@ -550,33 +550,6 @@ const bulkDelete = () => {
 
 
 <script>
-document.addEventListener('keydown', function (event) {
-    const isCtrlOrCmd = event.ctrlKey || event.metaKey;
-
-    if (event.key === 'Escape') {
-        const openOverlays = document.querySelectorAll('.overlay[style*="display: flex"]');
-        if (openOverlays.length > 0) {
-            openOverlays[0].style.display = 'none';
-        }
-    } else if (isCtrlOrCmd && event.key === 'f') {
-        event.preventDefault();
-        document.getElementById('search-overlay').style.display = 'flex';
-        document.getElementById('search-input').focus();
-    } else if (isCtrlOrCmd && event.key === 'b') {
-        event.preventDefault();
-        document.getElementById('overlay').style.display = 'flex';
-    } else if (isCtrlOrCmd && event.key === 'u') {
-        event.preventDefault();
-        document.getElementById('rebooking-overlay').style.display = 'flex';
-    } else if (isCtrlOrCmd && event.key === 'ArrowRight') {
-        event.preventDefault();
-        navigateMonth(1); // Zum nächsten Monat
-    } else if (isCtrlOrCmd && event.key === 'ArrowLeft') {
-        event.preventDefault();
-        navigateMonth(-1); // Zum vorherigen Monat
-    }
-});
-
 // Funktion zum Navigieren zwischen Monaten
 function navigateMonth(offset) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -660,6 +633,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+
+
+
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Hilfsfunktion zum Auslesen von URL-Parametern
@@ -701,8 +678,7 @@ document.addEventListener('DOMContentLoaded', function () {
 const translations = <?php echo json_encode($translations); ?>;
 
     // Funktion: Felder zurücksetzen
-    // Parameter isNew gibt an, ob es sich um einen neuen Eintrag handelt (true) oder um einen Bearbeitungsfall (false)
-    function resetOverlayFields(isNew) {
+    function resetOverlayFields() {
         idField.value               = '';
         entryTypeField.value        = 'expense';
         amountField.value           = '';
@@ -711,23 +687,9 @@ const translations = <?php echo json_encode($translations); ?>;
         repeatUntilMonthField.value = '';
         repeatUntilYearField.value  = '';
         categoryField.value         = '';
+        bookingDateField.value      = ''; // Buchungsdatum leeren
 
-        // Nur für neue Einträge das Buchungsdatum automatisch setzen
-        if (isNew) {
-            const today = new Date();
-            if (today.getMonth() + 1 === currentViewMonth && today.getFullYear() === currentViewYear) {
-                // Bei aktuellem Monat: heutiges Datum verwenden
-                bookingDateField.value = formatLocalDate(today);
-            } else {
-                // Andernfalls: 1. Tag des angezeigten Monats verwenden
-                const firstDay = new Date(currentViewYear, currentViewMonth - 1, 1);
-                bookingDateField.value = formatLocalDate(firstDay);
-            }
-        } else {
-            // Beim Bearbeiten wird das Datum später aus den geladenen Daten übernommen.
-            bookingDateField.value = '';
-        }
-
+        // Overlay-UI anpassen
         toggleRepeatUntilFields('no'); 
         setEntryType('expense'); // Annahme: diese Funktion ist extern definiert
         recurringField.disabled = false;
@@ -742,21 +704,29 @@ const translations = <?php echo json_encode($translations); ?>;
         }
     }
 
-    // Event, wenn das Dropdown (Regelmäßig) geändert wird
     recurringField.addEventListener('change', function () {
         toggleRepeatUntilFields(this.value);
     });
 
-    // Funktion zum Öffnen des Overlays für einen neuen Eintrag
+    // Funktion zum Öffnen des Overlays für einen neuen Eintrag inkl. korrekter Datumsvorauswahl
     function openNewEntryOverlay() {
-        overlayForm.dataset.override = 'new';
-        resetOverlayFields(true);
+        resetOverlayFields();
+        const today = new Date();
+        if (today.getMonth() + 1 === currentViewMonth && today.getFullYear() === currentViewYear) {
+            // Im aktuellen Monat: heutiges Datum verwenden
+            bookingDateField.value = formatLocalDate(today);
+        } else {
+            // Bei Zukunftsansicht: 1. Tag des angezeigten Monats verwenden
+            const firstDay = new Date(currentViewYear, currentViewMonth - 1, 1);
+            bookingDateField.value = formatLocalDate(firstDay);
+        }
         overlayTitle.textContent = translations.add_entry;
         overlayForm.action = 'add_entry.php';
+        overlayForm.dataset.override = '0';
         overlay.style.display = 'flex';
     }
 
-    // Button "Neuen Eintrag" -> Overlay öffnen
+    // Plus-Button: Overlay öffnen
     addButton.addEventListener('click', function () {
         openNewEntryOverlay();
     });
@@ -768,8 +738,7 @@ const translations = <?php echo json_encode($translations); ?>;
             console.error('Fehler beim Abrufen der Eintragsdaten:', response.status);
             throw new Error('Fehler beim Abrufen der Eintragsdaten');
         }
-        const data = await response.json();
-        return data;
+        return await response.json();
     }
 
     // Bearbeiten-Buttons (gesamte Serie)
@@ -778,9 +747,7 @@ const translations = <?php echo json_encode($translations); ?>;
         editButtons.forEach(button => {
             button.addEventListener('click', async function () {
                 const entryId = this.dataset.id;
-                overlayForm.dataset.override = 'edit';
-                resetOverlayFields(false);
-
+                resetOverlayFields();
                 try {
                     const entryData = await fetchEntryData(entryId, 'series');
                     if (entryData && typeof entryData.id !== 'undefined') {
@@ -792,16 +759,62 @@ const translations = <?php echo json_encode($translations); ?>;
                         repeatUntilYearField.value  = entryData.repeat_until_year  || '';
                         categoryField.value         = entryData.category || '';
                         bookingDateField.value      = entryData.booking_date || '';
-
                         toggleRepeatUntilFields(entryData.recurring);
-
                         if (entryData.type) {
                             entryTypeField.value = entryData.type;
                             setEntryType(entryData.type);
                         }
-
                         overlayTitle.textContent = translations.edit_movement_title;
                         overlayForm.action       = 'edit_entry.php';
+                        overlayForm.dataset.override = '0';
+                        overlay.style.display = 'flex';
+} else {
+    alert(translations.error_loading_entry);
+}
+} catch (error) {
+    console.error(translations.error_loading_entry_console, error);
+    alert(translations.error_loading_entry);
+}
+            });
+        });
+    }
+
+    // Bearbeiten-Buttons (einzelner Serieneintrag / Override)
+    function initEditSingleButtons() {
+        const editSingleButtons = document.querySelectorAll('.edit-single-button');
+        editSingleButtons.forEach(button => {
+            button.addEventListener('click', async function () {
+                const entryId = this.dataset.id;
+                resetOverlayFields();
+                try {
+                    const entryData = await fetchEntryData(entryId, 'single');
+                    if (entryData && typeof entryData.id !== 'undefined') {
+                        idField.value          = entryData.id;
+                        amountField.value      = entryData.amount;
+                        descriptionField.value = entryData.description;
+                        categoryField.value    = entryData.category || '';
+                        // Übernehme den Tag aus dem Serien-Buchungsdatum, aber Monat/Jahr aus dem aktuellen View
+                        if (entryData.booking_date) {
+                            let seriesDate = new Date(entryData.booking_date);
+                            let day = seriesDate.getDate();
+                            let monthStr = ('0' + currentViewMonth).slice(-2);
+                            let dayStr = ('0' + day).slice(-2);
+                            bookingDateField.value = `${currentViewYear}-${monthStr}-${dayStr}`;
+                        } else {
+                            bookingDateField.value = formatLocalDate(new Date());
+                        }
+                        if (entryData.type) {
+                            entryTypeField.value = entryData.type;
+                            setEntryType(entryData.type);
+                        }
+                        recurringField.value    = 'no';
+                        recurringField.disabled = true;
+                        repeatUntilMonthField.value = entryData.entry_month || '';
+                        repeatUntilYearField.value  = entryData.entry_year  || '';
+                        overlayTitle.textContent  = translations.edit_single_entry_title;
+                        overlayForm.action        = 'edit_entry.php';
+                        // Setze Override-Modus für einzelne Einträge
+                        overlayForm.dataset.override = '1';
                         overlay.style.display = 'flex';
                     } else {
                         alert('Fehler: Eintragsdaten konnten nicht geladen werden.');
@@ -814,65 +827,11 @@ const translations = <?php echo json_encode($translations); ?>;
         });
     }
 
-    // Bearbeiten-Buttons (einzelner Serieneintrag / Override)
-    function initEditSingleButtons() {
-        const editSingleButtons = document.querySelectorAll('.edit-single-button');
-        editSingleButtons.forEach(button => {
-            button.addEventListener('click', async function () {
-                const entryId = this.dataset.id;
-                overlayForm.dataset.override = 'edit';
-                resetOverlayFields(false);
-
-                try {
-                    const entryData = await fetchEntryData(entryId, 'single');
-                    if (entryData && typeof entryData.id !== 'undefined') {
-                        idField.value          = entryData.id;
-                        amountField.value      = entryData.amount;
-                        descriptionField.value = entryData.description;
-                        categoryField.value    = entryData.category || '';
-
-                        if (entryData.booking_date) {
-                            let seriesDate = new Date(entryData.booking_date);
-                            let day = seriesDate.getDate();
-                            let monthStr = ('0' + currentViewMonth).slice(-2);
-                            let dayStr = ('0' + day).slice(-2);
-                            bookingDateField.value = `${currentViewYear}-${monthStr}-${dayStr}`;
-                        } else {
-                            bookingDateField.value = formatLocalDate(new Date());
-                        }
-
-                        if (entryData.type) {
-                            entryTypeField.value = entryData.type;
-                            setEntryType(entryData.type);
-                        }
-
-                        recurringField.value    = 'no';
-                        recurringField.disabled = true;
-
-                        repeatUntilMonthField.value = entryData.entry_month || '';
-                        repeatUntilYearField.value  = entryData.entry_year  || '';
-
-                        overlayTitle.textContent  = translations.edit_single_entry_title;
-                        overlayForm.action        = 'edit_entry.php';
-                        overlay.style.display = 'flex';
-} else {
-    alert(translations.error_loading_entry);
-}
-} catch (error) {
-    console.error(translations.error_loading_entry_console, error);
-    alert(translations.error_loading_entry);
-}
-
-            });
-        });
-    }
-
     // Formular abschicken
     overlayForm.addEventListener('submit', async function (event) {
         event.preventDefault();
         const formData = new FormData(overlayForm);
-        formData.append('override', overlayForm.dataset.override || 'new');
-
+        formData.append('override', overlayForm.dataset.override || '0');
         try {
             const response = await fetch(overlayForm.action, {
                 method: 'POST',
@@ -911,6 +870,7 @@ const translations = <?php echo json_encode($translations); ?>;
             document.getElementById('search-input').focus();
         } else if (isCtrlOrCmd && event.key === 'b') {
             event.preventDefault();
+            // Öffne das Overlay für neue Bewegungen, inklusive Datumsvorauswahl
             openNewEntryOverlay();
         } else if (isCtrlOrCmd && event.key === 'u') {
             event.preventDefault();
@@ -929,6 +889,9 @@ const translations = <?php echo json_encode($translations); ?>;
     initEditSingleButtons();
 });
 </script>
+
+
+
 
 
 
