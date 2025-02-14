@@ -152,14 +152,13 @@ docker compose up -d
 5. Go to http://your-instance:8080/  -> Use the configured app credentials of your compose file to login.
 
 <h2>Screenshots? Yes, please!</h2>
+<img src="screenshots/IMG_6326.jpeg" alt="Screenshot" width="300">
 
 <img src="screenshots/IMG_6323.jpeg" alt="Screenshot" width="300">
 
 <img src="screenshots/IMG_6328.jpeg" alt="Screenshot" width="300">
 
 <img src="screenshots/IMG_6324.jpeg" alt="Screenshot" width="300">
-
-<img src="screenshots/IMG_6326.jpeg" alt="Screenshot" width="300">
 
 <img src="screenshots/IMG_6327.jpeg" alt="Screenshot" width="300">
 
