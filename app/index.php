@@ -31,6 +31,7 @@ if (!function_exists('getDisplayBookingDate')) {
     }
 }
 
+
 // Funktion zur Überprüfung/Erstellung der Tabelle
 function ensureUserTableExists($username, $conn) {
     $tableName = preg_replace('/[^a-zA-Z0-9_]/', '', $username); // Tabellennamen validieren
@@ -722,7 +723,9 @@ foreach ($finalEntries as $row) {
     echo "<div class='entry-content'>";
         echo "<div class='entry-title'>" . htmlspecialchars($row['description']) . "</div>";
         echo "<br>";
-        echo "<div class='entry-amount'><span class='currency'>" . $amount . " €</span></div>";
+$currency = getenv('CURRENCY') ?: '€';
+echo "<div class='entry-amount'><span class='currency'>" . $amount . " " . $currency . "</span></div>";
+
 
         // Dynamisches Buchungsdatum basierend auf $month/$year
         $displayDate = getDisplayBookingDate($row, $month, $year);
@@ -930,7 +933,6 @@ $stmt->fetch();
 $stmt->close();
 
 $totalFormatted = number_format((float)$total, 2, ',', '.');
-//echo "<div class='month-total'>Gesamt: $totalFormatted €</div>";
 ?>
 
 
@@ -965,7 +967,9 @@ $totalFormatted = number_format((float)$total, 2, ',', '.');
 <!--Anzeige des Kontostands -->
 
         <div class="total-box" style="text-align: left;">
-            <strong><?php echo $translations['balance_title'] ?? 'Balance:'; ?></strong> <span class="currency"><?= $totalFormatted ?> €</span>
+<?php $currency = getenv('CURRENCY') ?: '€'; ?>
+<strong><?php echo $translations['balance_title'] ?? 'Balance:'; ?></strong> 
+<span class="currency"><?= $totalFormatted ?> <?= $currency ?></span>
         </div>
 
 <?php
@@ -1195,7 +1199,8 @@ $balanceClass = ($balanceDifference >= 0) ? 'positive-balance' : 'negative-balan
 // Anzeige
 echo "<div class='total-box $balanceClass' style='text-align: left;'>";
 echo $translations['record_title'] ?? 'Record to previous month:';
-echo "<span>" . number_format($balanceDifference, 2, ',', '.') . " €</span>";
+//$currency = getenv('CURRENCY') ?: '€';
+echo "<span>" . number_format($balanceDifference, 2, ',', '.') . " " . $currency . "</span>";
 echo "</div>";
 
 
@@ -1589,7 +1594,8 @@ try {
             <div>
                 <!-- Betrag mit Zinsen -->
                 <span class="<?= $saving['total'] < 0 ? 'negative' : '' ?>">
-                    <?= number_format($saving['total'], 2, ',', '.') ?> €
+                   <?php $currency = getenv('CURRENCY') ?: '€'; ?>
+                    <?= number_format($saving['total'], 2, ',', '.') ?> <?= $currency ?>
                 </span>
             </div>
             <!-- Zinssatz -->
@@ -2261,6 +2267,7 @@ function closeOverlay() {
 
 
 
+
 <!-- Overlay für Umbuchungen bearbeiten -->
 <div class="overlay" id="edit-rebooking-overlay" style="display: none;">
     <div class="modal">
@@ -2402,6 +2409,7 @@ function closeOverlay() {
       }
   });
 </script>
+
 
 
 <script>
@@ -2726,9 +2734,11 @@ function changeMonth() {
 
     <div class="total-container">
 
+<?php $currency = getenv('CURRENCY') ?: '€'; ?>
 <div id="total-sum-container" style="text-align: center; margin-top: 20px; font-size: 18px; display: none;">
-    Summe der ausgewählten Einträge: <span id="total-sum">0.00 €</span>
-</div> <?php echo "<p>$displayText: " . number_format($finalSum ?? 0, 2, ',', '.') . " €</p>"; ?> </div>
+    Summe der ausgewählten Einträge: <span id="total-sum">0.00 <?= $currency ?></span>
+</div>
+<?php echo "<p>$displayText: " . number_format($finalSum ?? 0, 2, ',', '.') . " $currency</p>"; ?>
 
 
 <script>
@@ -3226,5 +3236,3 @@ savingsHistoryChartInstance = new Chart(ctx, {
       });
 }
 </script>
-
-
