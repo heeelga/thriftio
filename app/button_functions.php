@@ -697,11 +697,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Datumsfeld für Buchungsdatum
     const bookingDateField = document.getElementById('booking_date');
 
-    // Übersetzungen (Beispiel, ggf. anpassen)
-    const translations = {
-        edit_movement_title: 'Bewegung bearbeiten',
-        edit_single_entry_title: 'Einzelnen Serieneintrag bearbeiten',
-    };
+// Das PHP-Array wird per json_encode in ein JavaScript-Objekt konvertiert
+const translations = <?php echo json_encode($translations); ?>;
 
     // Funktion: Felder zurücksetzen
     // Parameter isNew gibt an, ob es sich um einen neuen Eintrag handelt (true) oder um einen Bearbeitungsfall (false)
@@ -754,7 +751,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function openNewEntryOverlay() {
         overlayForm.dataset.override = 'new';
         resetOverlayFields(true);
-        overlayTitle.textContent = 'Neue Bewegung hinzufügen';
+        overlayTitle.textContent = translations.add_entry;
         overlayForm.action = 'add_entry.php';
         overlay.style.display = 'flex';
     }
@@ -858,13 +855,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         overlayTitle.textContent  = translations.edit_single_entry_title;
                         overlayForm.action        = 'edit_entry.php';
                         overlay.style.display = 'flex';
-                    } else {
-                        alert('Fehler: Eintragsdaten konnten nicht geladen werden.');
-                    }
-                } catch (error) {
-                    console.error('Fehler beim Laden der Eintragsdaten:', error);
-                    alert('Fehler beim Laden der Eintragsdaten.');
-                }
+} else {
+    alert(translations.error_loading_entry);
+}
+} catch (error) {
+    console.error(translations.error_loading_entry_console, error);
+    alert(translations.error_loading_entry);
+}
+
             });
         });
     }
