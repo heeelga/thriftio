@@ -1946,6 +1946,15 @@ body {
     z-index: 1000;
 }
 
+/* Beide Seiten sollen gleich breit sein */
+.search-container,
+.burger-menu {
+    width: 40px;  /* gleiche feste Breite */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .menu-title {
     flex-grow: 1;
     text-align: center;
