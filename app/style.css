@@ -252,8 +252,12 @@ input:checked + .slider:before {
     cursor: pointer;
     color: #fff;             /* weiße Farbe für das Icon */
     font-size: 1.2rem;       /* Größe der Lupe */
-    padding: 6px;
-    border-radius: 50%; /* Stellt sicher, dass der Button immer rund ist */
+    width: 40px;             /* feste Breite */
+    height: 40px;            /* feste Höhe */
+    display: inline-flex;    /* flexible Box, um das Icon zu zentrieren */
+    align-items: center;     /* vertikale Zentrierung */
+    justify-content: center; /* horizontale Zentrierung */
+    border-radius: 50%;      /* rund */
     transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
