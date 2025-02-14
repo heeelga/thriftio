@@ -153,5 +153,7 @@ docker compose up -d
 
 <h2>Screenshots? Yes, please!</h2>
 
-![Screenshot](/screenshots/IMG_6328.jpeg)
+<img src="screenshots/IMG_6328.jpeg" alt="Screenshot" width="300">
+
+
 
