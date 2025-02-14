@@ -10,7 +10,8 @@ services:
     depends_on:
       - db
     environment:
-      LANGUAGE: de                                   #en and de are available for now
+      LANGUAGE: en                                   #en and de are available for now
+      CURRENCY: $                                    #The displayed currency: $,€,...
       DB_HOST: db
       MYSQL_DATABASE: finance
       MYSQL_USER: finance_user
