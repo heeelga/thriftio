@@ -14,7 +14,7 @@ services:
       LANGUAGE: de                                   #en and de are available for now
       CURRENCY: €
       DB_HOST: db
-      DOMAIN: ENTERYOURDOMAINHERE
+      DOMAIN: ${DOMAIN}                                #Your domain where you're hosting your service e.g. "thriftio.example.com"
       MYSQL_DATABASE: finance
       MYSQL_USER: finance_user
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}              #SUPERSECUREPASSWORDOFYOURCHOICE
