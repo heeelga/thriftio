@@ -1,0 +1,16 @@
+{
+  "page_title": "Kennwort zurücksetzen",
+  "reset_password": "Kennwort zurücksetzen",
+  "your_email": "Ihre E-Mail-Adresse",
+  "submit": "Absenden",
+  "back_to_login": "Zurück zum Login",
+  "captcha_missing": "Bitte bestätigen Sie, dass Sie kein Roboter sind.",
+  "captcha_failed": "Captcha Verifizierung fehlgeschlagen.",
+  "mail_subject": "Ihr ThriftIO-Account",
+  "mail_body_html": "<p>Hallo %s,</p><p>das Kennwort f&uuml;r Ihren ThriftIO-Account wurde zur&uuml;ck gesetzt.</p><br><p>Ihr neuer Benutzername lautet: <b>%s</b></p><p>Ihr neues Kennwort lautet: <b>%s</b><br></p><p>Bitte &auml;ndern Sie dies sobald wie m&ouml;glich!</p><p>Sollten Sie das Zur&uuml;cksetzen Ihres Kennworts nicht beauftragt haben,</p><p>schicken Sie bitte eine Mail an <a href=\"mailto:post@markusneuhaus.de\">post@markusneuhaus.de</a>!</p><br><p>VG Ihr ThriftIO Admin</p>",
+  "mail_body_alt": "Hallo %s,\n\ndas Kennwort f&uuml;r Ihren ThriftIO-Account wurde zur&uuml;ck gesetzt.\n\nIhr neuer Benutzername lautet: %s\nIhr neues Kennwort lautet: %s\nBitte &auml;ndern Sie dies sobald wie m&ouml;glich!\nSollten Sie das Zur&uuml;cksetzen Ihres Kennworts nicht beauftragt haben,\nschicken Sie bitte eine Mail an post@markusneuhaus.de!\n\nVG Ihr ThriftIO Admin",
+  "mail_sent": "Die Nachricht wurde versendet.",
+  "mail_not_sent": "Die Nachricht konnte nicht versendet werden.",
+  "email_not_found": "E-Mail-Adresse wurde in unserer Datenbank nicht gefunden.",
+  "captcha_alert": "Bitte lösen Sie die Turnstile-Challenge."
+}
