@@ -14,7 +14,6 @@ session_set_cookie_params([
     'samesite' => 'Lax'
 ]);
 
-
     session_start();
 }
 
@@ -48,6 +47,7 @@ if (isset($_SESSION['username'])) {
         $isAdmin = false;
     }
     $stmt->close();
+}
 
 // Sprache aus der Umgebungsvariable oder Standardwert 'de'
 $language = getenv('LANGUAGE') ?: 'de';
@@ -62,10 +62,10 @@ if (file_exists($languageFile)) {
 }    
 
     // Logging zum Debuggen:
-    error_log("Username: " . $username);
-    error_log("isAdmin (DB-Abfrage): " . var_export($isAdmin, true));
-} else {
-    $isAdmin = false;
-    error_log("Kein Username in der Session gefunden.");
-}
+//    error_log("Username: " . $username);
+//    error_log("isAdmin (DB-Abfrage): " . var_export($isAdmin, true));
+//} else {
+//    $isAdmin = false;
+//    error_log("Kein Username in der Session gefunden.");
+//}
 ?>
