@@ -4,12 +4,12 @@ I'm also not very experienced with GitHub, so please let me know if there's a be
 
 <h2>Security</h2>
 
-A Google reCAPTCHA API Key is required to login and to enable the password reset functionality. Registering a new reCAPTCHA key for your website should only take about 2 minutes. Without inserting the reCAPTCHA code into your .env file, you will not be able to login or to use the password reset feature.
+A Cloudflare Turnstile (equivalent to Google Captcha) API Key is required to login and to enable the password reset functionality. Registering a new Turnstile key for your website should only take about 2 minutes. Without inserting the keys into your .env file, you will not be able to login or to use the password reset feature.
 
-To register your reCAPTCHA key, visit:
-https://cloud.google.com/security/products/recaptcha
+To register your Turnstile keys, visit:
+https://www.cloudflare.com/application-services/products/turnstile/
 
-If you prefer not to use reCAPTCHA, use the provided login_without_recaptcha.php file located in the source folder. Simply move it to the app folder and rename it to login.php.Repeat with lost_without_recaptcha.php.
+If you prefer not to use Turnstile, use the provided login_without_turnstile.php file located in the source folder. Simply move it to the app folder and rename it to login.php.Repeat with lost_without_turnstile.php.
 
 Passwords are encrypted using bcrypt before being stored in the database. However, transaction data is currently unencrypted. I plan to implement full encryption for transactions in the future.
 
