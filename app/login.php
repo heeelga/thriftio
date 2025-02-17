@@ -1,17 +1,6 @@
 <?php
 require_once('dbconnection.php');
 
-// Sprache aus der Umgebungsvariable oder Standardwert 'de'
-$language = getenv('LANGUAGE') ?: 'de';
-
-// Passende Sprachdatei laden
-$languageFile = __DIR__ . "/languages/$language.json";
-if (file_exists($languageFile)) {
-    $translations = json_decode(file_get_contents($languageFile), true);
-} else {
-    $translations = json_decode(file_get_contents(__DIR__ . "/languages/de.json"), true);
-}
-
 // Cloudflare Turnstile Schlüssel aus den Umgebungsvariablen laden und trimmen
 $turnstile_sitekey = trim(getenv('TURNSTILE_SITEKEY') ?: 'default_site_key');
 $turnstile_secret  = trim(getenv('TURNSTILE_SECRET') ?: 'default_secret');
@@ -47,29 +36,11 @@ if (isBanned($ip)) {
   exit;
 }
 
-require('dbconnection.php');
-ini_set('session.save_path', '/var/lib/php/sessions');
-ini_set('session.gc_maxlifetime', 604800); // 7 Tage in Sekunden
-ini_set('session.cookie_lifetime', 604800); // 7 Tage Cookie-Lifetime
-
-session_set_cookie_params([
-    'lifetime' => 604800,
-    'path' => '/',
-    'domain' => getenv('DOMAIN') ?: 'DEFAULTDOMAIN',
-    'secure' => true,
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 if (isset($_POST['username'])) {
     // Cloudflare Turnstile Überprüfung
     if (isset($_POST['cf-turnstile-response']) && !empty($_POST['cf-turnstile-response'])) {
         $token = $_POST['cf-turnstile-response'];
-        error_log('Turnstile token received: ' . $token);
+//        error_log('Turnstile token received: ' . $token);
     } else {
         $msg = "<div class='error-message'>".($translations['captcha_missing'] ?? 'Bitte bestätigen Sie, dass Sie kein Roboter sind.')."</div>";
     }
@@ -183,9 +154,7 @@ if (isset($_POST['username'])) {
     }
 }
 ?>
-
 <!DOCTYPE html>
-<html lang="de_DE">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
@@ -242,13 +211,13 @@ if (isset($_POST['username'])) {
     document.querySelector('.login-form').addEventListener('submit', function(e) {
         if (document.getElementById('cf-turnstile-response').value === "") {
             e.preventDefault();
-            alert("Bitte lösen Sie die Turnstile-Challenge.");
+            alert("Bitte verifiziere, dass Du ein Mensch bist.");
         }
     });
     
     // Callback, wenn die Challenge erfolgreich gelöst wurde
     function onTurnstileSuccess(token) {
-        console.log("Turnstile token received:", token);
+//        console.log("Turnstile token received:", token);
         document.getElementById('cf-turnstile-response').value = token;
     }
 </script>
