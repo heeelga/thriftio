@@ -2,7 +2,7 @@
 require_once('dbconnection.php');
 
 // Sprache aus der Umgebungsvariable oder Standardwert 'de'
-$language = getenv('LANGUAGE') ?: 'de';
+$language = getenv('LANGUAGE') ?: 'en';
 
 // Passende Sprachdatei laden
 $languageFile = __DIR__ . "/languages/$language.json";
