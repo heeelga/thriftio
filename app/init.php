@@ -1,19 +1,5 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-
-ini_set('session.save_path', '/var/lib/php/sessions');
-ini_set('session.gc_maxlifetime', 604800); // 7 Tage in Sekunden
-ini_set('session.cookie_lifetime', 604800); // 7 Tage Cookie-Lifetime
-
-session_set_cookie_params([
-    'lifetime' => 604800,
-    'path' => '/',
-    'domain' => getenv('DOMAIN') ?: 'DOMAIN',
-    'secure' => true,
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
-
     session_start();
 }
 
@@ -47,7 +33,6 @@ if (isset($_SESSION['username'])) {
         $isAdmin = false;
     }
     $stmt->close();
-}
 
 // Sprache aus der Umgebungsvariable oder Standardwert 'de'
 $language = getenv('LANGUAGE') ?: 'de';
@@ -62,10 +47,10 @@ if (file_exists($languageFile)) {
 }    
 
     // Logging zum Debuggen:
-//    error_log("Username: " . $username);
-//    error_log("isAdmin (DB-Abfrage): " . var_export($isAdmin, true));
-//} else {
-//    $isAdmin = false;
-//    error_log("Kein Username in der Session gefunden.");
-//}
+    error_log("Username: " . $username);
+    error_log("isAdmin (DB-Abfrage): " . var_export($isAdmin, true));
+} else {
+    $isAdmin = false;
+    error_log("Kein Username in der Session gefunden.");
+}
 ?>
