@@ -937,26 +937,44 @@ $totalFormatted = number_format((float)$total, 2, ',', '.');
 
 
 
-<!--Floating Buttons über Plus Button-->
+<!-- Floating Buttons über Plus Button -->
 <div id="floating-action-buttons">
     <button id="main-fab" class="fab">
         <i class="fas fa-plus"></i>
     </button>
     <div id="fab-options" class="fab-options hidden">
-        <button id="add-entry" class="fab-option" title="<?php echo $translations['new_entry']?>">
+        <button id="add-entry" class="fab-option" title="<?php echo $translations['new_entry'] ?>">
             <i class="fas fa-wallet"></i>
+            <span class="fab-label"><?php echo $translations['new_entry'] ?></span>
         </button>
-        <button id="add-rebooking" class="fab-option" title="<?php echo $translations['new_rebooking']?>">
+        <button id="add-rebooking" class="fab-option" title="<?php echo $translations['new_rebooking'] ?>">
             <i class="fas fa-exchange-alt"></i>
+            <span class="fab-label"><?php echo $translations['new_rebooking'] ?></span>
         </button>
-        <button id="add-savings" class="fab-option" title="<?php echo $translations['new_savings_account']?>">
+        <button id="add-savings" class="fab-option" title="<?php echo $translations['new_savings_account'] ?>">
             <i class="fas fa-piggy-bank"></i>
+            <span class="fab-label"><?php echo $translations['new_savings_account'] ?></span>
         </button>
-        <button id="unhide-all" class="fab-option" title="<?php echo $translations['unhide_all']?>">
+        <button id="unhide-all" class="fab-option" title="<?php echo $translations['unhide_all'] ?>">
             <i class="fas fa-eye"></i>
+            <span class="fab-label"><?php echo $translations['unhide_all'] ?></span>
+        </button>
+        <!-- Neuer Hilfebutton ganz unten -->
+        <button id="toggle-help" class="fab-option" title="Hilfe">
+            <i class="fas fa-question-circle"></i>
+            <span class="fab-label">Hilfe</span>
         </button>
     </div>
 </div>
+
+<script>
+// Event-Listener für den neuen Hilfebutton, der die Beschriftungen toggelt
+document.getElementById('toggle-help').addEventListener('click', function(e) {
+    e.stopPropagation(); // Verhindert, dass andere Event-Listener (z.B. am übergeordneten Container) fälschlicherweise reagieren
+    var fabOptions = document.getElementById('fab-options');
+    fabOptions.classList.toggle('show-labels');
+});
+</script>
 
 <!--Scroll to top Button-->
 
