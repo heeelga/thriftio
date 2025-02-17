@@ -283,6 +283,7 @@ input:checked + .slider:before {
 
 
 
+
 /* Standardfarbe und Stil für Tabellenzellen */
 h4 {
     display: block;
@@ -1151,16 +1152,24 @@ body {
 /* Optionen (Floating Buttons) */
 .fab-options {
     position: fixed;
+    display: flex; /* Wichtig: als Flexbox, damit gap etc. wirken */
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    position: absolute;
-    bottom: 70px;
-    right: 0;
+    bottom: 160px;
+    right: 20px;
     opacity: 0;
     transform: scale(0.8);
     transition: opacity 0.3s ease, transform 0.3s ease;
-        z-index: 900;
+    z-index: 900;
+}
+.fab-options.show {
+    opacity: 1;
+    transform: scale(1);
+}
+.fab-options.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* Desktop: Positionierung relativ zum Menü, aber mit festem vertikalen Abstand */
@@ -1172,23 +1181,11 @@ body {
     }
 }
 
-
-
-.fab-options.show {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.fab-options.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Option-Buttons */
+/* Styling der Buttons */
 .fab-option {
-    display: flex; /* Flexbox für Icon-Zentrierung */
-    justify-content: center; /* Horizontale Zentrierung */
-    align-items: center; /* Vertikale Zentrierung */
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background-color: #007aff;
     color: white;
     border: none;
@@ -1199,12 +1196,34 @@ body {
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     transition: transform 0.3s ease, background-color 0.3s ease;
-    text-align: center; /* Textausrichtung */
-    line-height: 50px; /* Gleiche Höhe wie der Button */
-    padding: 0; /* Padding entfernen */
-    box-sizing: border-box; /* Korrekte Breitenberechnung */
+    text-align: center;
+    line-height: 50px;
+    padding: 0;
+    box-sizing: border-box;
+    position: relative; /* für die absolute Positionierung der Labels */
 }
 
+/* Beschriftungen als kleine Label-Elemente */
+.fab-label {
+    display: none;
+    position: absolute;
+    right: 100%;
+    margin-right: 10px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Wenn die Klasse "show-labels" im Container gesetzt ist, werden alle Labels eingeblendet */
+.fab-options.show-labels .fab-label {
+    display: inline-block;
+    opacity: 1;
+}
 
 /* Spezifische Farben für Buttons */
 #add-entry {
