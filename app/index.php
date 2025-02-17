@@ -1,13 +1,13 @@
 <?php
 include('init.php');
 // Prüfe, ob der Benutzer eingeloggt ist und das Passwort noch nicht geändert wurde
-if (isset($_SESSION['username']) && isset($_SESSION['changed_password']) && $_SESSION['changed_password'] == 0) {
+//if (isset($_SESSION['username']) && isset($_SESSION['changed_password']) && $_SESSION['changed_password'] == 0) {
     // Um Endlosschleifen zu vermeiden, leite nicht um, wenn wir bereits in change_pass.php sind
-    if (basename($_SERVER['PHP_SELF']) !== 'change_pass.php') {
-        header("Location: change_pass.php");
-        exit;
-    }
-}
+//    if (basename($_SERVER['PHP_SELF']) !== 'change_pass.php') {
+//        header("Location: change_pass.php");
+//        exit;
+//    }
+//}
 
 // Funktion um Datum in Serie dynamisch anzupassen
 if (!function_exists('getDisplayBookingDate')) {
@@ -104,7 +104,7 @@ include('style.css');
 //}
 
 // Benutzername aus der Session holen
-$username = $_SESSION['username'];
+//$username = $_SESSION['username'];
 
 // Sicherheitshalber Benutzername validieren (kein SQL-Injection)
 if (empty($username) || !is_string($username)) {
