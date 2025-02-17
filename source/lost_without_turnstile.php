@@ -2,10 +2,10 @@
 require('dbconnection.php');
 
 // Sprache aus der Umgebungsvariable oder Standardwert 'de'
-$language = getenv('LANGUAGE') ?: 'de';
+$language = getenv('LANGUAGE') ?: 'en';
 
-// Passende Sprachdatei laden
-$languageFile = __DIR__ . "/languages/$language.json";
+// Passende Sprachdatei laden (z.B. de.json oder en.json)
+$languageFile = __DIR__ . "/languages/{$language}.json";
 if (file_exists($languageFile)) {
     $translations = json_decode(file_get_contents($languageFile), true);
 } else {
@@ -15,6 +15,9 @@ if (file_exists($languageFile)) {
 // Logging
 $logMessage = "LANGUAGE set to: " . $language;
 error_log($logMessage);
+
+// APP_EMAIL aus der Umgebung auslesen
+$appEmail = getenv('APP_EMAIL') ?: 'default@example.com';
 
 $outputMessage = ""; // Variable für Statusmeldungen
 
@@ -58,13 +61,13 @@ if (isset($_POST['email'])) {
         $mail->isSMTP();
 
         // SMTP-Konfigurationswerte aus Umgebungsvariablen auslesen
-        $smtp_host         = getenv('SMTP_HOST') ?: 'default_host';
-        $smtp_user         = getenv('SMTP_USER') ?: 'default_user';
-        $smtp_password     = getenv('SMTP_PASSWORD') ?: 'default_password';
-        $smtp_sender       = getenv('SMTP_SENDER') ?: 'default_sender@example.com';
-        $smtp_sender_name  = getenv('SMTP_SENDER_NAME') ?: 'Default Sender';
-        $smtp_replyto      = getenv('SMTP_REPLYTO') ?: 'default_replyto@example.com';
-        $smtp_replyto_name = getenv('SMTP_REPLYTO_NAME') ?: 'Default ReplyTo';
+        $smtp_host     = getenv('SMTP_HOST') ?: 'default_host';
+        $smtp_user     = getenv('SMTP_USER') ?: 'default_user';
+        $smtp_password = getenv('SMTP_PASSWORD') ?: 'default_password';
+        // Hier wird APP_EMAIL als Absender verwendet, daher entfällt die Nutzung von SMTP_SENDER
+        // Ebenso setzen wir den Absendernamen auf "ThriftIO"
+        
+        $smtp_replyto = getenv('SMTP_REPLYTO') ?: 'default_replyto@example.com';
 
         $mail->Host       = $smtp_host;
         $mail->SMTPAuth   = true;
@@ -73,35 +76,19 @@ if (isset($_POST['email'])) {
         $mail->SMTPSecure = 'tls';
         $mail->Port       = 587;
 
-        $mail->setFrom($smtp_sender, $smtp_sender_name);
-        $mail->addReplyTo($smtp_replyto, $smtp_replyto_name);
+        $mail->setFrom($appEmail, "ThriftIO");
+        $mail->addReplyTo($appEmail, "ThriftIO");
 
         // Empfänger hinzufügen
         $mail->addAddress($resetmail, $resetfirstname);
 
         $mail->isHTML(true);
-        $mail->Subject = 'Dein ThriftIO-Account';
-        $mail->Body    = '<p>Hallo ' . $resetfirstname . ',</p>
-                          <p>das Kennwort f&uuml;r Deinen ThriftIO-Account wurde zur&uuml;ck gesetzt.</p>
-                          <br>
-                          <p>Dein neuer Benutzername lautet: <b>' . $resetusername . '</b></p>
-                          <p>Dein neues Kennwort lautet: <b>' . $randompwd . '</b><br></p>
-                          <p>Bitte &auml;ndere dies sobald wie m&ouml;glich!</p>
-                          <p>Solltest Du das Zur&uuml;cksetzen Deines Kennworts nicht beauftragt haben,</p>
-                          <p>schicke mir bitte eine Mail an die Dir bekannte Mailadresse!</p>
-                          <br>
-                          <p>VG dein ThriftIO Admin</p>';
-
-        $mail->AltBody = 'Hallo ' . $resetfirstname . ',
-das Kennwort f&uuml;r Deinen ThriftIO-Account wurde zur&uuml;ck gesetzt.
-
-Dein neuer Benutzername lautet: ' . $resetusername . '
-Dein neues Kennwort lautet: ' . $randompwd . '
-Bitte &auml;ndere dies sobald wie m&ouml;glich!
-Solltest Du das Zur&uuml;cksetzen Deines Kennworts nicht beauftragt haben,
-schicke mir bitte eine Mail an die Dir bekannte Mailadresse!
-
-VG dein ThriftIO Admin';
+        // Übersetzte Mail-Inhalte mit Platzhaltern:
+        // 1. Empfängername, 2. neuer Benutzername, 3. neues Kennwort,
+        // 4. APP_EMAIL, 5. Absendername ("ThriftIO")
+        $mail->Subject = sprintf($translations['mail_subject'], "ThriftIO");
+        $mail->Body    = sprintf($translations['mail_body_html'], $resetfirstname, $resetusername, $randompwd, $appEmail, "ThriftIO");
+        $mail->AltBody = sprintf($translations['mail_body_alt'], $resetfirstname, $resetusername, $randompwd, $appEmail, "ThriftIO");
 
         if (!$mail->send()) {
             $outputMessage = $translations['mail_not_sent'] ?? 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
@@ -119,7 +106,7 @@ VG dein ThriftIO Admin';
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <title>Login</title>
+    <title><?php echo $translations['page_title'] ?? 'Reset Password'; ?></title>
     <style>
         .login-form button {
             margin-bottom: 10px;
@@ -140,14 +127,15 @@ VG dein ThriftIO Admin';
   <div class="container">
     <div class="form-container">
       <form class="login-form" action="" method="post">
-        <h2><?php echo $translations['reset_password'] ?? 'Reset password'; ?></h2>
+        <h2><?php echo $translations['reset_password'] ?? 'Reset Password'; ?></h2>
         <div class="form-group">
           <input type="text" name="email" placeholder="<?php echo $translations['your_email'] ?? 'Your E-Mail address'; ?>" required />
         </div>
-        <br><center>
-        <button type="submit" value="Reset" class="login-button"><?php echo $translations['submit'] ?? 'Submit'; ?></button>
+        <br>
+        <center>
+          <button type="submit" value="Reset" class="login-button"><?php echo $translations['submit'] ?? 'Submit'; ?></button>
+        </center>
       </form>
-       </center>
       <?php if (!empty($outputMessage)): ?>
           <div class="<?php echo (strpos($outputMessage, 'could not') !== false) ? 'error' : 'message'; ?>">
               <?php echo $outputMessage; ?>
