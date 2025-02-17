@@ -1,7 +1,7 @@
 <?php
+include('init.php');
 require('dbconnection.php');
 include('auth.php');
-include('init.php');
 include('menubar.php');
 $username = $_SESSION['username'];
 $msg = '';
