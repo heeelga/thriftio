@@ -12,5 +12,5 @@
   "mail_sent": "Die Nachricht wurde versendet.",
   "mail_not_sent": "Die Nachricht konnte nicht versendet werden.",
   "email_not_found": "E-Mail-Adresse wurde in der Datenbank nicht gefunden.",
-  "captcha_alert": "Bitte lösen Sie die Turnstile-Challenge."
+  "captcha_alert": "Bitte verifiziere, dass Du ein Mensch bist."
 }
