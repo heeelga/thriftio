@@ -1,7 +1,8 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+include('init.php');
+include('dbconnection.php');
+include('auth.php');
+include('menubar.php');
 
 
 // Prüfe, ob der Benutzer eingeloggt ist und das Passwort noch nicht geändert wurde
@@ -22,10 +23,6 @@ if (file_exists($languageFile)) {
     $translations = json_decode(file_get_contents(__DIR__ . "/languages/de.json"), true);
 }
 
-require('dbconnection.php');
-include('auth.php');
-include('init.php');
-include('menubar.php');
 $username = $_SESSION['username'];
 $msg = '';
 
