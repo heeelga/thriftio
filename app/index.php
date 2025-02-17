@@ -86,12 +86,12 @@ function ensureUserTableExists($username, $conn) {
 }
 
 // Benutzerprüfung und Tabellenanpassung
-if (isset($_SESSION['username'])) {
-    $username = $_SESSION['username'];
-    ensureUserTableExists($username, $conn);
-} else {
-    header('login.php');
-}
+//if (isset($_SESSION['username'])) {
+//    $username = $_SESSION['username'];
+//    ensureUserTableExists($username, $conn);
+//} else {
+//    header('login.php');
+//}
 
 
 include('auth.php');
@@ -99,9 +99,9 @@ include('menubar.php');
 include('style.css');
 
 // Sicherstellen, dass ein Benutzer eingeloggt ist
-if (!isset($_SESSION['username'])) {
-header(login.php);
-}
+//if (!isset($_SESSION['username'])) {
+//header(login.php);
+//}
 
 // Benutzername aus der Session holen
 $username = $_SESSION['username'];
@@ -994,11 +994,11 @@ document.getElementById('toggle-help').addEventListener('click', function(e) {
 include 'dbconnection.php';
 
 // Prüfen, ob Benutzer eingeloggt
-if (!isset($_SESSION['username'])) {
-    die("Fehler: Kein Benutzer eingeloggt.");
-}
+//if (!isset($_SESSION['username'])) {
+//    die("Fehler: Kein Benutzer eingeloggt.");
+//}
 
-$username = $_SESSION['username'];
+//$username = $_SESSION['username'];
 
 // Tabelle für Kontostände
 $balanceTable = "Kontostand_" . $username;
@@ -1227,7 +1227,7 @@ echo "</div>";
 //include 'dbconnection.php';
 
 // Angemeldeten Benutzernamen abrufen
-$username = $_SESSION['username'];
+//$username = $_SESSION['username'];
 
 // Zielmonat/-jahr, in den/ das der Nutzer springt
 $targetMonth = intval($_GET['month'] ?? date('n'));
@@ -1863,12 +1863,12 @@ document.querySelectorAll('.savings-delete-button').forEach(button => {
 //include 'dbconnection.php'; // Verbindung zur Datenbank
 
 // Benutzername aus der Session abrufen
-if (!isset($_SESSION['username'])) {
-    echo "Fehler: Kein Benutzer eingeloggt.";
-    exit;
-}
+//if (!isset($_SESSION['username'])) {
+//    echo "Fehler: Kein Benutzer eingeloggt.";
+//    exit;
+//}
 
-$username = $_SESSION['username'];
+//$username = $_SESSION['username'];
 
 // Funktion zum Laden der Kategorien
 function getUserCategories($username, $conn) {
