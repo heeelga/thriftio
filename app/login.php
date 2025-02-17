@@ -6,23 +6,21 @@ $language = getenv('LANGUAGE') ?: 'de';
 
 // Passende Sprachdatei laden
 $languageFile = __DIR__ . "/languages/$language.json";
-
 if (file_exists($languageFile)) {
     $translations = json_decode(file_get_contents($languageFile), true);
 } else {
     $translations = json_decode(file_get_contents(__DIR__ . "/languages/de.json"), true);
 }
 
-// reCAPTCHA-Schlüssel aus den Umgebungsvariablen laden und trimmen
-$recaptcha_sitekey = trim(getenv('RECAPTCHA_SITEKEY') ?: 'default_site_key');
-$recaptcha_secret  = trim(getenv('RECAPTCHA_SECRET') ?: 'default_secret');
+// Cloudflare Turnstile Schlüssel aus den Umgebungsvariablen laden und trimmen
+$turnstile_sitekey = trim(getenv('TURNSTILE_SITEKEY') ?: 'default_site_key');
+$turnstile_secret  = trim(getenv('TURNSTILE_SECRET') ?: 'default_secret');
 
 $msg="";
 
 // Funktion zur Ermittlung der ursprünglichen Client-IP
 function getClientIp() {
     if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        // Es könnten mehrere IPs übergeben werden – die erste ist in der Regel die ursprüngliche
         $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
         return trim($ips[0]);
     } elseif (!empty($_SERVER['HTTP_X_REAL_IP'])) {
@@ -40,59 +38,72 @@ function isBanned($ip) {
   $stmt->execute();
   
   $result = $stmt->fetch(PDO::FETCH_ASSOC);
-  $count = $result['count'];
-  
-  if ($count >= 6) {
-    return true;
-  }
-  
-  return false;
+  return ($result['count'] >= 6);
 }
 
 $ip = getClientIp();
-
 if (isBanned($ip)) {
   header("Location: https://www.google.de");
   exit;
 }
 
 require('dbconnection.php');
+ini_set('session.save_path', '/var/lib/php/sessions');
+ini_set('session.gc_maxlifetime', 604800); // 7 Tage in Sekunden
+ini_set('session.cookie_lifetime', 604800); // 7 Tage Cookie-Lifetime
 
-ini_set('session.gc_maxlifetime', 604800); // In Sekunden
-ini_set('session.cookie_lifetime', 604800); // Cookie ebenfalls 7 Tage
+session_set_cookie_params([
+    'lifetime' => 604800,
+    'path' => '/',
+    'domain' => getenv('DOMAIN') ?: 'DEFAULTDOMAIN',
+    'secure' => true,
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 if (isset($_POST['username'])) {
-    // reCAPTCHA-Überprüfung
-    if (isset($_POST['g-recaptcha-response']) && !empty($_POST['g-recaptcha-response'])) {
-        $token = $_POST['g-recaptcha-response'];
-        error_log('Token received: ' . $token);
+    // Cloudflare Turnstile Überprüfung
+    if (isset($_POST['cf-turnstile-response']) && !empty($_POST['cf-turnstile-response'])) {
+        $token = $_POST['cf-turnstile-response'];
+        error_log('Turnstile token received: ' . $token);
     } else {
         $msg = "<div class='error-message'>".($translations['captcha_missing'] ?? 'Bitte bestätigen Sie, dass Sie kein Roboter sind.')."</div>";
     }
     
     if (empty($msg)) {
         $ip = $_SERVER['REMOTE_ADDR'];
-        $verifyUrl = "https://www.google.com/recaptcha/api/siteverify?secret=" . urlencode($recaptcha_secret) . "&response=" . urlencode($token) . "&remoteip=" . urlencode($ip);
-        $response = file_get_contents($verifyUrl);
-        $responseKeys = json_decode($response, true);
-        error_log('reCAPTCHA response: ' . print_r($responseKeys, true));
+        $verifyUrl = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+        $data = http_build_query([
+          'secret'   => $turnstile_secret,
+          'response' => $token,
+          'remoteip' => $ip
+        ]);
         
-        if (
-            !isset($responseKeys["success"]) || !$responseKeys["success"] ||
-            !isset($responseKeys["score"]) || $responseKeys["score"] < 0.5 ||
-            !isset($responseKeys["action"]) || $responseKeys["action"] !== 'reset_password'
-        ) {
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method'  => 'POST',
+                'content' => $data,
+            ],
+        ];
+        $context  = stream_context_create($options);
+        $response = file_get_contents($verifyUrl, false, $context);
+        $responseKeys = json_decode($response, true);
+        error_log('Turnstile response: ' . print_r($responseKeys, true));
+        
+        if (!isset($responseKeys["success"]) || !$responseKeys["success"]) {
             $msg = "<div class='error-message'>".($translations['captcha_failed'] ?? 'Captcha Verifizierung fehlgeschlagen.')."</div>";
         }
     }
     
     if (empty($msg)) {
-      $username = stripslashes($_REQUEST['username']); // entfernt Backslashes
-      $username = mysqli_real_escape_string($conn, $username); // escaped Sonderzeichen
+      // Benutzername und Passwort validieren
+      $username = stripslashes($_REQUEST['username']);
+      $username = mysqli_real_escape_string($conn, $username);
       $password = stripslashes($_REQUEST['password']);
       $password = mysqli_real_escape_string($conn, $password);
 
@@ -101,32 +112,23 @@ if (isset($_POST['username'])) {
       $result = mysqli_query($conn, $query) or die(mysqli_error($conn));
       $row = mysqli_fetch_assoc($result);
       
-      // Nur wenn $row vorhanden ist, die Werte auslesen, ansonsten Default-Werte setzen
-      if ($row) {
-          $storedPassword = $row['password'];
-      } else {
-          $storedPassword = null;
-      }
+      $storedPassword = $row ? $row['password'] : null;
 
       if ($row && password_verify($password, $storedPassword)) {
         // Session-Variablen setzen
         $_SESSION['username'] = $username;
-        $_SESSION['changed_password'] = $row['changed_password']; // Wird benötigt, um den Zustand auf anderen Seiten zu prüfen
+        $_SESSION['changed_password'] = $row['changed_password'];
 
-        // Überprüfen, ob das Passwort geändert werden muss
         if ($row['changed_password'] == 0) {
-          // Benutzer zur Passwortänderung weiterleiten
           header("Location: change_pass.php");
           exit;
         }
 
-        // SET PRUEF auf 0
+        // Benutzer-Login-Status in der Datenbank aktualisieren
         $query5 = "UPDATE `user` SET pruef = '0' WHERE username='$username'";
-        $result5 = mysqli_query($conn, $query5) or die(mysqli_error($conn));
+        mysqli_query($conn, $query5) or die(mysqli_error($conn));
         
-        header("Location: index.php");
-        
-        include("dbconnection.php");
+        // Logging des erfolgreichen Logins
         $date = date("Y-m-d H:i:s");
         $ip = getClientIp();
         $location_data = file_get_contents("http://ip-api.com/json/{$ip}");
@@ -139,10 +141,13 @@ if (isset($_POST['username'])) {
             $country = "unknown";
         }
         $query = "INSERT INTO logins (name, login_status, ip_address, city, country) VALUES ('$username', true, '$ip', '$city', '$country')";
-        $result = mysqli_query($conn, $query);
+        mysqli_query($conn, $query);
         require_once 'pushover.php';
         pushover("$username hat sich aus $city, $country mit IP $ip eingeloggt!");
-        
+
+        // Redirect nach erfolgreichem Login
+        header("Location: index.php");
+        exit;
       } else {
         $msg = "<div class='error-message'>";
         if ($row && isset($row['active']) && $row['active'] == 0) {
@@ -152,7 +157,7 @@ if (isset($_POST['username'])) {
         }
         $msg .= "</div><br><br>";
         
-        include("dbconnection.php");
+        // Logging des fehlgeschlagenen Logins
         $ip = getClientIp();
         $location_data = file_get_contents("http://ip-api.com/json/{$ip}");
         $location_data = json_decode($location_data);
@@ -164,14 +169,13 @@ if (isset($_POST['username'])) {
             $country = "unknown";
         }
         $query = "INSERT INTO logins (name, login_status, ip_address, city, country) VALUES ('$username', false, '$ip', '$city', '$country')";
-        $result = mysqli_query($conn, $query);
+        mysqli_query($conn, $query);
         require_once 'pushover.php';
         pushover("Fehlerhafter Login von $username aus $city, $country mit IP $ip !");
         
-        // Update der fehlgeschlagenen Login-Versuche – nur wenn der Benutzer existiert
+        // Erhöhe die Anzahl der fehlgeschlagenen Login-Versuche
         if ($row) {
-            $failed_logins = $row['failed_logins'];
-            $failed_logins++; // Zähler erhöhen
+            $failed_logins = $row['failed_logins'] + 1;
             $query_update = "UPDATE `user` SET failed_logins=$failed_logins WHERE username='$username'";
             mysqli_query($conn, $query_update);
         }
@@ -193,8 +197,6 @@ if (isset($_POST['username'])) {
   <link rel="apple-touch-icon" href="/images/icon_small.jpg">
   <link rel="stylesheet" href="login.css" />
   <meta name="viewport" content="width=device-width; initial-scale=1.0; minimum-scale=1.0; maximum-scale=1.0; user-scalable=0; shrink-to-fit=no"/>
-  <!-- reCAPTCHA v3-Script laden -->
-  <script src="https://www.google.com/recaptcha/api.js?render=<?php echo $recaptcha_sitekey; ?>"></script>
   <style>
     .error-message {
       background-color: #E63946;
@@ -219,33 +221,36 @@ if (isset($_POST['username'])) {
         <div class="form-group">
           <input type="password" name="password" id="password" placeholder="<?php echo $translations['password'] ?? 'Password'; ?>" required autocomplete="on">
         </div>
-        <!-- Verstecktes Feld für den reCAPTCHA-Token -->
-        <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response">
+        <!-- Hidden Feld für Turnstile Token -->
+        <input type="hidden" id="cf-turnstile-response" name="cf-turnstile-response">
+        <!-- Cloudflare Turnstile Widget (mit "compact" Größe) -->
+        <div class="cf-turnstile" data-sitekey="<?php echo $turnstile_sitekey; ?>" data-size="compact" data-callback="onTurnstileSuccess"></div>
         <div class="forgot-password">
           <a href="lost.php"><?php echo $translations['lost_password'] ?? 'Lost password?'; ?></a>
         </div>
         <button type="submit" class="login-button"><?php echo $translations['login_button'] ?? 'Login'; ?></button>
-        <div class="status-message">
-        </div>
+        <div class="status-message"></div>
       </center>
     </form>
   </div>
 </div>
 
-<!-- JavaScript zum Abrufen des reCAPTCHA v3-Tokens -->
+<!-- Cloudflare Turnstile Script laden -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script>
-grecaptcha.ready(function() {
+    // Falls das Token noch nicht gesetzt ist, blockieren wir das Abschicken des Formulars
     document.querySelector('.login-form').addEventListener('submit', function(e) {
-        e.preventDefault(); // Verhindert das direkte Abschicken
-        grecaptcha.execute('<?php echo $recaptcha_sitekey; ?>', {action: 'reset_password'}).then(function(token) {
-            console.log('Token received:', token);
-            document.getElementById('g-recaptcha-response').value = token;
-            e.target.submit();
-        }).catch(function(error) {
-            console.error('Error retrieving token:', error);
-        });
+        if (document.getElementById('cf-turnstile-response').value === "") {
+            e.preventDefault();
+            alert("Bitte lösen Sie die Turnstile-Challenge.");
+        }
     });
-});
+    
+    // Callback, wenn die Challenge erfolgreich gelöst wurde
+    function onTurnstileSuccess(token) {
+        console.log("Turnstile token received:", token);
+        document.getElementById('cf-turnstile-response').value = token;
+    }
 </script>
 </body>
 </html>
