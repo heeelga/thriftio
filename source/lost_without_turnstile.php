@@ -1,150 +1,209 @@
 <?php
-require('dbconnection.php');
+if (session_status() === PHP_SESSION_NONE) {
+
+ini_set('session.save_path', '/var/lib/php/sessions');
+ini_set('session.gc_maxlifetime', 604800); // 7 Tage in Sekunden
+ini_set('session.cookie_lifetime', 604800); // 7 Tage Cookie-Lifetime
+
+session_set_cookie_params([
+    'lifetime' => 604800,
+    'path' => '/',
+    'domain' => getenv('DOMAIN') ?: 'DOMAIN',
+    'secure' => true,
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
+
+    session_start();
+}
+
+
+include('dbconnection.php');
 
 // Sprache aus der Umgebungsvariable oder Standardwert 'de'
 $language = getenv('LANGUAGE') ?: 'en';
 
-// Passende Sprachdatei laden (z.B. de.json oder en.json)
-$languageFile = __DIR__ . "/languages/{$language}.json";
+// Passende Sprachdatei laden
+$languageFile = __DIR__ . "/languages/$language.json";
+
 if (file_exists($languageFile)) {
     $translations = json_decode(file_get_contents($languageFile), true);
 } else {
     $translations = json_decode(file_get_contents(__DIR__ . "/languages/de.json"), true);
 }
 
-// Logging
-$logMessage = "LANGUAGE set to: " . $language;
-error_log($logMessage);
+$msg="";
 
-// APP_EMAIL aus der Umgebung auslesen
-$appEmail = getenv('APP_EMAIL') ?: 'default@example.com';
-
-$outputMessage = ""; // Variable für Statusmeldungen
-
-if (isset($_POST['email'])) {
-    $email = stripslashes($_REQUEST['email']);
-    $email = mysqli_real_escape_string($conn, $email);
-
-    // Überprüfen, ob der Benutzer in der Datenbank existiert
-    $query = "SELECT * FROM `user` WHERE email='$email'";
-    $result = mysqli_query($conn, $query) or die(mysqli_error($conn));
-    $row = mysqli_fetch_array($result);
-    
-    if ($row) {
-        $resetid = $row['id'];
-        $resetmail = $row['email'];
-        $resetfirstname = $row['firstname'];
-        $resetusername = $row['username'];
-
-        function generateRandomString($length = 16) {
-            $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            $charactersLength = strlen($characters);
-            $randomString = '';
-            for ($i = 0; $i < $length; $i++) {
-                $randomString .= $characters[rand(0, $charactersLength - 1)];
-            }
-            return $randomString;
-        }
-
-        $randompwd = generateRandomString();
-        
-        // Neues Passwort mit bcrypt hashen
-        $hashedPwd = password_hash($randompwd, PASSWORD_BCRYPT);
-        $query2 = "UPDATE `user` SET password='" . $hashedPwd . "' WHERE id='$resetid'";
-        $result2 = mysqli_query($conn, $query2);
-
-        // Mail - Anfang 
-        require 'phpmailer/PHPMailerAutoload.php';
-
-        $mail = new PHPMailer;
-        $mail->SMTPDebug = 0;
-        $mail->isSMTP();
-
-        // SMTP-Konfigurationswerte aus Umgebungsvariablen auslesen
-        $smtp_host     = getenv('SMTP_HOST') ?: 'default_host';
-        $smtp_user     = getenv('SMTP_USER') ?: 'default_user';
-        $smtp_password = getenv('SMTP_PASSWORD') ?: 'default_password';
-        // Hier wird APP_EMAIL als Absender verwendet, daher entfällt die Nutzung von SMTP_SENDER
-        // Ebenso setzen wir den Absendernamen auf "ThriftIO"
-        
-        $smtp_replyto = getenv('SMTP_REPLYTO') ?: 'default_replyto@example.com';
-
-        $mail->Host       = $smtp_host;
-        $mail->SMTPAuth   = true;
-        $mail->Username   = $smtp_user;
-        $mail->Password   = $smtp_password;
-        $mail->SMTPSecure = 'tls';
-        $mail->Port       = 587;
-
-        $mail->setFrom($appEmail, "ThriftIO");
-        $mail->addReplyTo($appEmail, "ThriftIO");
-
-        // Empfänger hinzufügen
-        $mail->addAddress($resetmail, $resetfirstname);
-
-        $mail->isHTML(true);
-        // Übersetzte Mail-Inhalte mit Platzhaltern:
-        // 1. Empfängername, 2. neuer Benutzername, 3. neues Kennwort,
-        // 4. APP_EMAIL, 5. Absendername ("ThriftIO")
-        $mail->Subject = sprintf($translations['mail_subject'], "ThriftIO");
-        $mail->Body    = sprintf($translations['mail_body_html'], $resetfirstname, $resetusername, $randompwd, $appEmail, "ThriftIO");
-        $mail->AltBody = sprintf($translations['mail_body_alt'], $resetfirstname, $resetusername, $randompwd, $appEmail, "ThriftIO");
-
-        if (!$mail->send()) {
-            $outputMessage = $translations['mail_not_sent'] ?? 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
-        } else {
-            $outputMessage = $translations['mail_sent'] ?? 'Message has been sent';
-        }
+// Funktion zur Ermittlung der ursprünglichen Client-IP
+function getClientIp() {
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        // Es könnten mehrere IPs übergeben werden – die erste ist in der Regel die ursprüngliche
+        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        return trim($ips[0]);
+    } elseif (!empty($_SERVER['HTTP_X_REAL_IP'])) {
+        return $_SERVER['HTTP_X_REAL_IP'];
     } else {
-        // Falls die eingegebene E-Mail-Adresse nicht in der DB gefunden wurde
-        $outputMessage = $translations['email_not_found'] ?? 'E-Mail address not found in our database.';
+        return $_SERVER['REMOTE_ADDR'];
     }
 }
+
+function isBanned($ip) {
+  global $pdo;
+  
+  $stmt = $pdo->prepare('SELECT count(*) AS count FROM logins WHERE ip_address = :ip AND login_status = 0 AND login_date >= DATE_SUB(NOW(), INTERVAL 120 MINUTE)');
+  $stmt->bindValue(':ip', $ip, PDO::PARAM_STR);
+  $stmt->execute();
+  
+  $result = $stmt->fetch(PDO::FETCH_ASSOC);
+  $count = $result['count'];
+  
+  if ($count >= 6) {
+    return true;
+  }
+  
+  return false;
+}
+
+$ip = getClientIp();
+
+if (isBanned($ip)) {
+  header("Location: https://www.google.de");
+  exit;
+}
+
+if (isset($_POST['username'])) {
+  $username = stripslashes($_REQUEST['username']); // entfernt Backslashes
+  $username = mysqli_real_escape_string($conn, $username); // escaped Sonderzeichen
+  $password = stripslashes($_REQUEST['password']);
+  $password = mysqli_real_escape_string($conn, $password);
+
+  // Überprüfen, ob der Benutzer in der Datenbank existiert
+  $query = "SELECT * FROM `user` WHERE username='$username'";
+  $result = mysqli_query($conn, $query) or die(mysqli_error($conn));
+  $row = mysqli_fetch_assoc($result);
+  
+  // Nur wenn $row vorhanden ist, die Werte auslesen, ansonsten Default-Werte setzen
+  if ($row) {
+      $storedPassword = $row['password'];
+  } else {
+      $storedPassword = null;
+  }
+
+  if ($row && password_verify($password, $storedPassword)) {
+    // Session-Variablen setzen
+    $_SESSION['username'] = $username;
+    $_SESSION['changed_password'] = $row['changed_password']; // Wird benötigt, um den Zustand auf anderen Seiten zu prüfen
+
+    // Überprüfen, ob das Passwort geändert werden muss
+    if ($row['changed_password'] == 0) {
+      // Benutzer zur Passwortänderung weiterleiten
+      header("Location: change_pass.php");
+      exit;
+    }
+
+    // SET PRUEF auf 0
+    $query5 = "UPDATE `user` SET pruef = '0' WHERE username='$username'";
+    $result5 = mysqli_query($conn, $query5) or die(mysqli_error($conn));
+    
+    header("Location: index.php");
+    
+    include("dbconnection.php");
+    $date = date("Y-m-d H:i:s");
+    $ip = getClientIp();
+    $location_data = file_get_contents("http://ip-api.com/json/{$ip}");
+    $location_data = json_decode($location_data);
+    if ($location_data && isset($location_data->status) && $location_data->status === 'success') {
+        $city = $location_data->city;
+        $country = $location_data->country;
+    } else {
+        $city = "unknown";
+        $country = "unknown";
+    }
+    $query = "INSERT INTO logins (name, login_status, ip_address, city, country) VALUES ('$username', true, '$ip', '$city', '$country')";
+    $result = mysqli_query($conn, $query);
+    require_once 'pushover.php';
+    pushover("$username hat sich aus $city, $country mit IP $ip eingeloggt!");
+    
+  } else {
+    $msg = "<div class='error-message'>";
+    if ($row && isset($row['active']) && $row['active'] == 0) {
+      $msg .= $translations['account_locked'];
+    } else {
+      $msg .= $translations['wrong_login'];
+    }
+    $msg .= "</div><br><br>";
+    
+    include("dbconnection.php");
+    $ip = getClientIp();
+    $location_data = file_get_contents("http://ip-api.com/json/{$ip}");
+    $location_data = json_decode($location_data);
+    if ($location_data && isset($location_data->status) && $location_data->status === 'success') {
+        $city = $location_data->city;
+        $country = $location_data->country;
+    } else {
+        $city = "unknown";
+        $country = "unknown";
+    }
+    $query = "INSERT INTO logins (name, login_status, ip_address, city, country) VALUES ('$username', false, '$ip', '$city', '$country')";
+    $result = mysqli_query($conn, $query);
+    require_once 'pushover.php';
+    pushover("Fehlerhafter Login von $username aus $city, $country mit IP $ip !");
+    
+    // Update der fehlgeschlagenen Login-Versuche – nur wenn der Benutzer existiert
+    if ($row) {
+        $failed_logins = $row['failed_logins'];
+        $failed_logins++; // Zähler erhöhen
+        $query_update = "UPDATE `user` SET failed_logins=$failed_logins WHERE username='$username'";
+        mysqli_query($conn, $query_update);
+    }
+  }
+}
+else { }
 ?>
+
+
 <!DOCTYPE html>
-<html>
+<html lang="de_DE">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <title><?php echo $translations['page_title'] ?? 'Reset Password'; ?></title>
-    <style>
-        .login-form button {
-            margin-bottom: 10px;
-        }
-        .message {
-            margin-top: 15px;
-            color: green;
-        }
-        .error {
-            margin-top: 15px;
-            color: red;
-        }
-    </style>
-    <link rel="stylesheet" href="login.css" />
+<link rel="icon" href="images/icon_small.jpg" type="image/jpg">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="apple-touch-icon" href="/images/icon_small.jpg">
+  <link rel="stylesheet" href="login.css" />
+  <meta name="viewport" content="width=device-width; initial-scale=1.0; minimum-scale=1.0; maximum-scale=1.0; user-scalable=0; shrink-to-fit=no"/>
+  <style>
+    .error-message {
+      background-color: #E63946;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-<div class="content">
-  <div class="container">
-    <div class="form-container">
-      <form class="login-form" action="" method="post">
-        <h2><?php echo $translations['reset_password'] ?? 'Reset Password'; ?></h2>
+
+<div class="container">
+  <div class="form-container">
+    <form class="login-form" action="" method="post">
+      <center>
+        <h2>Login</h2>
         <div class="form-group">
-          <input type="text" name="email" placeholder="<?php echo $translations['your_email'] ?? 'Your E-Mail address'; ?>" required />
+          <center><?php echo $msg ?></center>
+          <input type="text" name="username" id="username" placeholder="<?php echo $translations['username'] ?? 'Username'; ?>" required autocomplete="on">
         </div>
-        <br>
-        <center>
-          <button type="submit" value="Reset" class="login-button"><?php echo $translations['submit'] ?? 'Submit'; ?></button>
-        </center>
-      </form>
-      <?php if (!empty($outputMessage)): ?>
-          <div class="<?php echo (strpos($outputMessage, 'could not') !== false) ? 'error' : 'message'; ?>">
-              <?php echo $outputMessage; ?>
-          </div>
-      <?php endif; ?>
-      <div class="forgot-password">
-          <a href="login.php"><?php echo $translations['back_to_login'] ?? 'Back to Login'; ?></a>
-      </div>
-    </div>
+        <div class="form-group">
+          <input type="password" name="password" id="password" placeholder="<?php echo $translations['password'] ?? 'Password'; ?>" required autocomplete="on">
+        </div>
+        <div class="forgot-password">
+          <a href="lost.php"><?php echo $translations['lost_password'] ?? 'Lost password?'; ?></a>
+        </div>
+        <button type="submit" class="login-button"><?php echo $translations['login_button'] ?? 'Login'; ?></button>
+        <div class="status-message">
+        </div>
+      </center>
+    </form>
   </div>
 </div>
 </body>
