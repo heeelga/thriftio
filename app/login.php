@@ -1,22 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-
-ini_set('session.save_path', '/var/lib/php/sessions');
-ini_set('session.gc_maxlifetime', 604800); // 7 Tage in Sekunden
-ini_set('session.cookie_lifetime', 604800); // 7 Tage Cookie-Lifetime
-
-session_set_cookie_params([
-    'lifetime' => 604800,
-    'path' => '/',
-    'domain' => getenv('DOMAIN') ?: 'DOMAIN',
-    'secure' => true,
-    'httponly' => true,
-    'samesite' => 'Lax'
-]);
-
-    session_start();
-}
-
+include('init.php');
 require_once('dbconnection.php');
 
 // Cloudflare Turnstile Schlüssel aus den Umgebungsvariablen laden und trimmen
