@@ -22,7 +22,7 @@ if (isset($_POST['email'])) {
     // Cloudflare Turnstile Überprüfung: Token aus dem versteckten Feld auslesen
     if (isset($_POST['cf-turnstile-response']) && !empty($_POST['cf-turnstile-response'])) {
         $token = $_POST['cf-turnstile-response'];
-        error_log('Turnstile token received: ' . $token);
+//        error_log('Turnstile token received: ' . $token);
     } else {
         $outputMessage = $translations['captcha_missing'] ?? 'Bitte bestätigen Sie, dass Sie kein Roboter sind.';
     }
@@ -46,7 +46,7 @@ if (isset($_POST['email'])) {
         $context  = stream_context_create($options);
         $response = file_get_contents($verifyUrl, false, $context);
         $responseKeys = json_decode($response, true);
-        error_log('Turnstile response: ' . print_r($responseKeys, true));
+//        error_log('Turnstile response: ' . print_r($responseKeys, true));
         
         if (!isset($responseKeys["success"]) || !$responseKeys["success"]) {
             $outputMessage = $translations['captcha_failed'] ?? 'Captcha Verifizierung fehlgeschlagen.';
@@ -191,12 +191,12 @@ if (isset($_POST['email'])) {
 document.querySelector('.login-form').addEventListener('submit', function(e) {
     if (document.getElementById('cf-turnstile-response').value === "") {
         e.preventDefault();
-        alert("<?php echo $translations['captcha_alert'] ?? 'Bitte lösen Sie die Turnstile-Challenge.'; ?>");
+        alert("<?php echo $translations['captcha_alert'] ?? 'Bitte verifiziere, dass du ein Mensch bist.'; ?>");
     }
 });
 // Callback, wenn die Challenge erfolgreich gelöst wurde
 function onTurnstileSuccess(token) {
-    console.log("Turnstile token received:", token);
+//    console.log("Turnstile token received:", token);
     document.getElementById('cf-turnstile-response').value = token;
 }
 </script>
