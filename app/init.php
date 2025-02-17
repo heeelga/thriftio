@@ -1,227 +1,71 @@
 <?php
-require_once('dbconnection.php');
+if (session_status() === PHP_SESSION_NONE) {
 
-// Cloudflare Turnstile Schlüssel aus den Umgebungsvariablen laden und trimmen
-$turnstile_sitekey = trim(getenv('TURNSTILE_SITEKEY') ?: 'default_site_key');
-$turnstile_secret  = trim(getenv('TURNSTILE_SECRET') ?: 'default_secret');
+ini_set('session.save_path', '/var/lib/php/sessions');
+ini_set('session.gc_maxlifetime', 604800); // 7 Tage in Sekunden
+ini_set('session.cookie_lifetime', 604800); // 7 Tage Cookie-Lifetime
 
-$msg="";
+session_set_cookie_params([
+    'lifetime' => 604800,
+    'path' => '/',
+    'domain' => getenv('DOMAIN') ?: 'DOMAIN',
+    'secure' => true,
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
 
-// Funktion zur Ermittlung der ursprünglichen Client-IP
-function getClientIp() {
-    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-        return trim($ips[0]);
-    } elseif (!empty($_SERVER['HTTP_X_REAL_IP'])) {
-        return $_SERVER['HTTP_X_REAL_IP'];
-    } else {
-        return $_SERVER['REMOTE_ADDR'];
-    }
+    session_start();
 }
 
-function isBanned($ip) {
-  global $pdo;
-  
-  $stmt = $pdo->prepare('SELECT count(*) AS count FROM logins WHERE ip_address = :ip AND login_status = 0 AND login_date >= DATE_SUB(NOW(), INTERVAL 120 MINUTE)');
-  $stmt->bindValue(':ip', $ip, PDO::PARAM_STR);
-  $stmt->execute();
-  
-  $result = $stmt->fetch(PDO::FETCH_ASSOC);
-  return ($result['count'] >= 6);
-}
-
-$ip = getClientIp();
-if (isBanned($ip)) {
-  header("Location: https://www.google.de");
-  exit;
-}
-
-if (isset($_POST['username'])) {
-    // Cloudflare Turnstile Überprüfung
-    if (isset($_POST['cf-turnstile-response']) && !empty($_POST['cf-turnstile-response'])) {
-        $token = $_POST['cf-turnstile-response'];
-        error_log('Turnstile token received: ' . $token);
-    } else {
-        $msg = "<div class='error-message'>".($translations['captcha_missing'] ?? 'Bitte bestätigen Sie, dass Sie kein Roboter sind.')."</div>";
-    }
-    
-    if (empty($msg)) {
-        $ip = $_SERVER['REMOTE_ADDR'];
-        $verifyUrl = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-        $data = http_build_query([
-          'secret'   => $turnstile_secret,
-          'response' => $token,
-          'remoteip' => $ip
-        ]);
-        
-        $options = [
-            'http' => [
-                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-                'method'  => 'POST',
-                'content' => $data,
-            ],
-        ];
-        $context  = stream_context_create($options);
-        $response = file_get_contents($verifyUrl, false, $context);
-        $responseKeys = json_decode($response, true);
-        error_log('Turnstile response: ' . print_r($responseKeys, true));
-        
-        if (!isset($responseKeys["success"]) || !$responseKeys["success"]) {
-            $msg = "<div class='error-message'>".($translations['captcha_failed'] ?? 'Captcha Verifizierung fehlgeschlagen.')."</div>";
-        }
-    }
-    
-    if (empty($msg)) {
-      // Benutzername und Passwort validieren
-      $username = stripslashes($_REQUEST['username']);
-      $username = mysqli_real_escape_string($conn, $username);
-      $password = stripslashes($_REQUEST['password']);
-      $password = mysqli_real_escape_string($conn, $password);
-
-      // Überprüfen, ob der Benutzer in der Datenbank existiert
-      $query = "SELECT * FROM `user` WHERE username='$username'";
-      $result = mysqli_query($conn, $query) or die(mysqli_error($conn));
-      $row = mysqli_fetch_assoc($result);
-      
-      $storedPassword = $row ? $row['password'] : null;
-
-      if ($row && password_verify($password, $storedPassword)) {
-        // Session-Variablen setzen
-        $_SESSION['username'] = $username;
-        $_SESSION['changed_password'] = $row['changed_password'];
-
-        if ($row['changed_password'] == 0) {
-          header("Location: change_pass.php");
-          exit;
-        }
-
-        // Benutzer-Login-Status in der Datenbank aktualisieren
-        $query5 = "UPDATE `user` SET pruef = '0' WHERE username='$username'";
-        mysqli_query($conn, $query5) or die(mysqli_error($conn));
-        
-        // Logging des erfolgreichen Logins
-        $date = date("Y-m-d H:i:s");
-        $ip = getClientIp();
-        $location_data = file_get_contents("http://ip-api.com/json/{$ip}");
-        $location_data = json_decode($location_data);
-        if ($location_data && isset($location_data->status) && $location_data->status === 'success') {
-            $city = $location_data->city;
-            $country = $location_data->country;
-        } else {
-            $city = "unknown";
-            $country = "unknown";
-        }
-        $query = "INSERT INTO logins (name, login_status, ip_address, city, country) VALUES ('$username', true, '$ip', '$city', '$country')";
-        mysqli_query($conn, $query);
-        require_once 'pushover.php';
-        pushover("$username hat sich aus $city, $country mit IP $ip eingeloggt!");
-
-        // Redirect nach erfolgreichem Login
-        header("Location: index.php");
+// Prüfe, ob der Benutzer eingeloggt ist und das Passwort noch nicht geändert wurde
+if (isset($_SESSION['username']) && isset($_SESSION['changed_password']) && $_SESSION['changed_password'] == 0) {
+    // Um Endlosschleifen zu vermeiden, leite nicht um, wenn wir bereits in change_pass.php sind
+    if (basename($_SERVER['PHP_SELF']) !== 'change_pass.php') {
+        header("Location: change_pass.php");
         exit;
-      } else {
-        $msg = "<div class='error-message'>";
-        if ($row && isset($row['active']) && $row['active'] == 0) {
-          $msg .= $translations['account_locked'];
-        } else {
-          $msg .= $translations['wrong_login'];
-        }
-        $msg .= "</div><br><br>";
-        
-        // Logging des fehlgeschlagenen Logins
-        $ip = getClientIp();
-        $location_data = file_get_contents("http://ip-api.com/json/{$ip}");
-        $location_data = json_decode($location_data);
-        if ($location_data && isset($location_data->status) && $location_data->status === 'success') {
-            $city = $location_data->city;
-            $country = $location_data->country;
-        } else {
-            $city = "unknown";
-            $country = "unknown";
-        }
-        $query = "INSERT INTO logins (name, login_status, ip_address, city, country) VALUES ('$username', false, '$ip', '$city', '$country')";
-        mysqli_query($conn, $query);
-        require_once 'pushover.php';
-        pushover("Fehlerhafter Login von $username aus $city, $country mit IP $ip !");
-        
-        // Erhöhe die Anzahl der fehlgeschlagenen Login-Versuche
-        if ($row) {
-            $failed_logins = $row['failed_logins'] + 1;
-            $query_update = "UPDATE `user` SET failed_logins=$failed_logins WHERE username='$username'";
-            mysqli_query($conn, $query_update);
-        }
-      }
     }
 }
+
+// Stellen Sie sicher, dass in der Session der Username gespeichert ist
+if (isset($_SESSION['username'])) {
+    $username = $_SESSION['username'];
+
+    // Stellen Sie eine Datenbankverbindung her.
+    // Beispiel: Nehmen wir an, die Datei db_connect.php enthält den Verbindungsaufbau und setzt $conn
+    include_once 'dbconnection.php';
+
+    // Führe die Abfrage aus, ob der Benutzer Admin ist
+    $stmt = $conn->prepare("SELECT admin FROM user WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $isAdmin = ($row['admin'] == 1);
+    } else {
+        $isAdmin = false;
+    }
+    $stmt->close();
+}
+
+// Sprache aus der Umgebungsvariable oder Standardwert 'de'
+$language = getenv('LANGUAGE') ?: 'de';
+
+// Passende Sprachdatei laden
+$languageFile = __DIR__ . "/languages/$language.json";
+
+if (file_exists($languageFile)) {
+    $translations = json_decode(file_get_contents($languageFile), true);
+} else {
+    $translations = json_decode(file_get_contents(__DIR__ . "/languages/de.json"), true);
+}    
+
+    // Logging zum Debuggen:
+//    error_log("Username: " . $username);
+//    error_log("isAdmin (DB-Abfrage): " . var_export($isAdmin, true));
+//} else {
+//    $isAdmin = false;
+//    error_log("Kein Username in der Session gefunden.");
+//}
 ?>
-
-<!DOCTYPE html>
-<html lang="de_DE">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <title>Login</title>
-  <link rel="icon" href="images/icon_small.jpg" type="image/jpg">
-  <link rel="manifest" href="/manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="apple-touch-icon" href="/images/icon_small.jpg">
-  <link rel="stylesheet" href="login.css" />
-  <meta name="viewport" content="width=device-width; initial-scale=1.0; minimum-scale=1.0; maximum-scale=1.0; user-scalable=0; shrink-to-fit=no"/>
-  <style>
-    .error-message {
-      background-color: #E63946;
-      color: white;
-      padding: 10px;
-      border-radius: 5px;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
-
-<div class="container">
-  <div class="form-container">
-    <form class="login-form" action="" method="post">
-      <center>
-        <h2>Login</h2>
-        <div class="form-group">
-          <center><?php echo $msg ?></center>
-          <input type="text" name="username" id="username" placeholder="<?php echo $translations['username'] ?? 'Username'; ?>" required autocomplete="on">
-        </div>
-        <div class="form-group">
-          <input type="password" name="password" id="password" placeholder="<?php echo $translations['password'] ?? 'Password'; ?>" required autocomplete="on">
-        </div>
-        <!-- Hidden Feld für Turnstile Token -->
-        <input type="hidden" id="cf-turnstile-response" name="cf-turnstile-response">
-        <!-- Cloudflare Turnstile Widget (mit "compact" Größe) -->
-        <div class="cf-turnstile" data-sitekey="<?php echo $turnstile_sitekey; ?>" data-size="compact" data-callback="onTurnstileSuccess"></div>
-        <div class="forgot-password">
-          <a href="lost.php"><?php echo $translations['lost_password'] ?? 'Lost password?'; ?></a>
-        </div>
-        <button type="submit" class="login-button"><?php echo $translations['login_button'] ?? 'Login'; ?></button>
-        <div class="status-message"></div>
-      </center>
-    </form>
-  </div>
-</div>
-
-<!-- Cloudflare Turnstile Script laden -->
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-<script>
-    // Falls das Token noch nicht gesetzt ist, blockieren wir das Abschicken des Formulars
-    document.querySelector('.login-form').addEventListener('submit', function(e) {
-        if (document.getElementById('cf-turnstile-response').value === "") {
-            e.preventDefault();
-            alert("Bitte lösen Sie die Turnstile-Challenge.");
-        }
-    });
-    
-    // Callback, wenn die Challenge erfolgreich gelöst wurde
-    function onTurnstileSuccess(token) {
-        console.log("Turnstile token received:", token);
-        document.getElementById('cf-turnstile-response').value = token;
-    }
-</script>
-</body>
-</html>
