@@ -137,6 +137,7 @@ if (isset($_POST['email'])) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <center>
     <title><?php echo $translations['page_title'] ?? 'Reset Password'; ?></title>
     <!-- Cloudflare Turnstile Script laden -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
@@ -184,6 +185,7 @@ if (isset($_POST['email'])) {
     </div>
   </div>
 </div>
+</center>
 <script>
 // Falls das Token noch nicht gesetzt ist, blockieren wir das Abschicken des Formulars
 document.querySelector('.login-form').addEventListener('submit', function(e) {
