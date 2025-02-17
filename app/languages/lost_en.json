@@ -11,6 +11,6 @@
   "mail_body_alt": "Hello %s,\n\nYour ThriftIO account password has been reset.\n\nYour new username is: %s\nYour new password is: %s\nPlease change it as soon as possible!\nIf you did not request a password reset,\nplease send an email to post@markusneuhaus.de!\n\nRegards, your ThriftIO Admin",
   "mail_sent": "The message has been sent.",
   "mail_not_sent": "The message could not be sent.",
-  "email_not_found": "E-Mail address not found in our database.",
+  "email_not_found": "E-Mail address not found in database.",
   "captcha_alert": "Please solve the Turnstile challenge."
 }
