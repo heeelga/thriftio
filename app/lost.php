@@ -2,47 +2,53 @@
 require('dbconnection.php');
 
 // Sprache aus der Umgebungsvariable oder Standardwert 'de'
-$language = getenv('LANGUAGE') ?: 'de';
+$language = getenv('LANGUAGE') ?: 'en';
 
-// Passende Sprachdatei laden
-$languageFile = __DIR__ . "/languages/$language.json";
+// Passende Sprachdatei für lost.php laden (lost_de.json bzw. lost_en.json)
+$languageFile = __DIR__ . "/languages/lost_{$language}.json";
 if (file_exists($languageFile)) {
     $translations = json_decode(file_get_contents($languageFile), true);
 } else {
-    $translations = json_decode(file_get_contents(__DIR__ . "/languages/de.json"), true);
+    $translations = json_decode(file_get_contents(__DIR__ . "/languages/lost_de.json"), true);
 }
 
-// Logging: Überprüfe, ob die Schlüssel korrekt geladen wurden
-error_log('RECAPTCHA_SITEKEY: ' . $recaptcha_sitekey);
-error_log('RECAPTCHA_SECRET: ' . $recaptcha_secret);
+// Cloudflare Turnstile Schlüssel aus den Umgebungsvariablen laden und trimmen
+$turnstile_sitekey = trim(getenv('TURNSTILE_SITEKEY') ?: 'default_site_key');
+$turnstile_secret  = trim(getenv('TURNSTILE_SECRET') ?: 'default_secret');
 
 $outputMessage = ""; // Variable für Statusmeldungen
 
 if (isset($_POST['email'])) {
-    // reCAPTCHA-Überprüfung für v3: Token aus dem versteckten Feld auslesen
-    if (isset($_POST['g-recaptcha-response']) && !empty($_POST['g-recaptcha-response'])) {
-        $token = $_POST['g-recaptcha-response'];
-        error_log('Token erhalten: ' . $token);
+    // Cloudflare Turnstile Überprüfung: Token aus dem versteckten Feld auslesen
+    if (isset($_POST['cf-turnstile-response']) && !empty($_POST['cf-turnstile-response'])) {
+        $token = $_POST['cf-turnstile-response'];
+        error_log('Turnstile token received: ' . $token);
     } else {
         $outputMessage = $translations['captcha_missing'] ?? 'Bitte bestätigen Sie, dass Sie kein Roboter sind.';
     }
     
     if (empty($outputMessage)) {
         $ip = $_SERVER['REMOTE_ADDR'];
-        // Anfrage an Google reCAPTCHA v3 API
-        $verifyUrl = "https://www.google.com/recaptcha/api/siteverify?secret=" . urlencode($recaptcha_secret) . "&response=" . urlencode($token) . "&remoteip=" . urlencode($ip);
-        $response = file_get_contents($verifyUrl);
+        $verifyUrl = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+        $data = http_build_query([
+          'secret'   => $turnstile_secret,
+          'response' => $token,
+          'remoteip' => $ip
+        ]);
+        
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method'  => 'POST',
+                'content' => $data,
+            ],
+        ];
+        $context  = stream_context_create($options);
+        $response = file_get_contents($verifyUrl, false, $context);
         $responseKeys = json_decode($response, true);
+        error_log('Turnstile response: ' . print_r($responseKeys, true));
         
-        // Protokolliere die komplette Antwort von Google für Debug-Zwecke
-        error_log('reCAPTCHA response: ' . print_r($responseKeys, true));
-        
-        // Für reCAPTCHA v3: Überprüfe success, Score und die erwartete Aktion
-        if (
-            !isset($responseKeys["success"]) || !$responseKeys["success"] ||
-            !isset($responseKeys["score"]) || $responseKeys["score"] < 0.5 ||
-            !isset($responseKeys["action"]) || $responseKeys["action"] !== 'reset_password'
-        ) {
+        if (!isset($responseKeys["success"]) || !$responseKeys["success"]) {
             $outputMessage = $translations['captcha_failed'] ?? 'Captcha Verifizierung fehlgeschlagen.';
         }
     }
@@ -110,28 +116,10 @@ if (isset($_POST['email'])) {
             $mail->addAddress($resetmail, $resetfirstname);
 
             $mail->isHTML(true);
-            $mail->Subject = 'Dein ThriftIO-Account';
-            $mail->Body    = '<p>Hallo ' . $resetfirstname . ',</p>
-                              <p>das Kennwort f&uuml;r Deinen ThriftIO-Account wurde zur&uuml;ck gesetzt.</p>
-                              <br>
-                              <p>Dein neuer Benutzername lautet: <b>' . $resetusername . '</b></p>
-                              <p>Dein neues Kennwort lautet: <b>' . $randompwd . '</b><br></p>
-                              <p>Bitte &auml;ndere dies sobald wie m&ouml;glich!</p>
-                              <p>Solltest Du das Zur&uuml;cksetzen Deines Kennworts nicht beauftragt haben,</p>
-                              <p>schicke mir bitte eine Mail an die Dir bekannte Mailadresse</a>!</p>
-                              <br>
-                              <p>VG dein ThriftIO Admin</p>';
-
-            $mail->AltBody = 'Hallo ' . $resetfirstname . ',
-das Kennwort f&uuml;r Deinen ThriftIO-Account wurde zur&uuml;ck gesetzt.
-
-Dein neuer Benutzername lautet: ' . $resetusername . '
-Dein neues Kennwort lautet: ' . $randompwd . '
-Bitte &auml;ndere dies sobald wie m&ouml;glich!
-Solltest Du das Zur&uuml;cksetzen Deines Kennworts nicht beauftragt haben,
-schicke mir bitte eine Mail an die Dir bekannte Mailadresse!
-
-VG dein ThriftIO Admin';
+            // Übersetzte Mail-Inhalte einsetzen (mithilfe von sprintf, um Variablen einzusetzen)
+            $mail->Subject = $translations['mail_subject'];
+            $mail->Body    = sprintf($translations['mail_body_html'], $resetfirstname, $resetusername, $randompwd);
+            $mail->AltBody = sprintf($translations['mail_body_alt'], $resetfirstname, $resetusername, $randompwd);
 
             if (!$mail->send()) {
                 $outputMessage = $translations['mail_not_sent'] ?? 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
@@ -144,15 +132,14 @@ VG dein ThriftIO Admin';
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <title>Login</title>
-    <!-- reCAPTCHA v3-Script laden mit dynamischem Site Key -->
-    <script src="https://www.google.com/recaptcha/api.js?render=<?php echo $recaptcha_sitekey; ?>"></script>
+    <title><?php echo $translations['page_title'] ?? 'Reset Password'; ?></title>
+    <!-- Cloudflare Turnstile Script laden -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         .login-form button {
             margin-bottom: 10px;
@@ -173,13 +160,15 @@ VG dein ThriftIO Admin';
   <div class="container">
     <div class="form-container">
       <form class="login-form" action="" method="post">
-        <h2><?php echo $translations['reset_password'] ?? 'Reset password'; ?></h2>
+        <h2><?php echo $translations['reset_password'] ?? 'Reset Password'; ?></h2>
         <div class="form-group">
           <input type="text" name="email" placeholder="<?php echo $translations['your_email'] ?? 'Your E-Mail address'; ?>" required />
         </div>
         <br>
-        <!-- Verstecktes Feld für den reCAPTCHA-Token -->
-        <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response">
+        <!-- Hidden Feld für Turnstile Token -->
+        <input type="hidden" id="cf-turnstile-response" name="cf-turnstile-response">
+        <!-- Cloudflare Turnstile Widget (mit "compact" Größe) -->
+        <div class="cf-turnstile" data-sitekey="<?php echo $turnstile_sitekey; ?>" data-size="compact" data-callback="onTurnstileSuccess"></div>
         <center>
           <button type="submit" value="Reset" class="login-button"><?php echo $translations['submit'] ?? 'Submit'; ?></button>
         </center>
@@ -195,21 +184,19 @@ VG dein ThriftIO Admin';
     </div>
   </div>
 </div>
-
-<!-- JavaScript zum Abrufen des reCAPTCHA v3-Tokens -->
 <script>
-grecaptcha.ready(function() {
-    document.querySelector('.login-form').addEventListener('submit', function(e) {
-        e.preventDefault(); // Verhindert das direkte Abschicken
-        grecaptcha.execute('<?php echo $recaptcha_sitekey; ?>', {action: 'reset_password'}).then(function(token) {
-            console.log('Token received:', token);
-            document.getElementById('g-recaptcha-response').value = token;
-            e.target.submit();
-        }).catch(function(error) {
-            console.error('Error retrieving token:', error);
-        });
-    });
+// Falls das Token noch nicht gesetzt ist, blockieren wir das Abschicken des Formulars
+document.querySelector('.login-form').addEventListener('submit', function(e) {
+    if (document.getElementById('cf-turnstile-response').value === "") {
+        e.preventDefault();
+        alert("<?php echo $translations['captcha_alert'] ?? 'Bitte lösen Sie die Turnstile-Challenge.'; ?>");
+    }
 });
+// Callback, wenn die Challenge erfolgreich gelöst wurde
+function onTurnstileSuccess(token) {
+    console.log("Turnstile token received:", token);
+    document.getElementById('cf-turnstile-response').value = token;
+}
 </script>
 </body>
 </html>
