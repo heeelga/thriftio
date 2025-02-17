@@ -98,7 +98,7 @@ The app was originally developed in German, but approximately 70-80% of the cont
 
 <h2>Prerequisites</h2>
 - Docker compose installed <br>
-- Google recaptcha Websitekey if you want to use the hardened "Lost password" functionality
+- Cloudflare Turnstile keys if you want to use the hardened login and "lost password" functions
 
 <h1>Quick Setup</h1>
 
