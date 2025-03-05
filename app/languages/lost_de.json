@@ -1,0 +1,16 @@
+{
+  "page_title": "Kennwort zurücksetzen",
+  "reset_password": "Kennwort zurücksetzen",
+  "your_email": "Deine E-Mail-Adresse",
+  "submit": "Absenden",
+  "back_to_login": "Zurück zum Login",
+  "captcha_missing": "Bitte bestätige, dass Du kein Roboter bist.",
+  "captcha_failed": "Captcha Verifizierung fehlgeschlagen.",
+  "mail_subject": "Dein ThriftIO-Account",
+  "mail_body_html": "<p>Hallo %s,</p><p>das Kennwort f&uuml;r Deinen ThriftIO-Account wurde zur&uuml;ck gesetzt.</p><br><p>Dein neuer Benutzername lautet: <b>%s</b></p><p>Dein neues Kennwort lautet: <b>%s</b><br></p><p>Bitte &auml;nder dies sobald wie m&ouml;glich!</p><p>Solltest Du das Zur&uuml;cksetzen Deines Kennworts nicht beauftragt haben,</p><p>schicke mir bitte eine Mail an <a href=\"mailto:%s\">%s</a>!</p><br><p>VG Ihr %s Admin</p>",
+  "mail_body_alt": "Hallo %s,\n\ndas Kennwort f&uuml;r Deinen ThriftIO-Account wurde zur&uuml;ck gesetzt.\n\nDein neuer Benutzername lautet: %s\nDein neues Kennwort lautet: %s\nBitte &auml;nder dies sobald wie m&ouml;glich!\nSolltest Du das Zur&uuml;cksetzen Deines Kennworts nicht beauftragt haben,\nschicke mir bitte eine Mail an %s!\n\nVG Ihr %s Admin",
+  "mail_sent": "Die Nachricht wurde versendet.",
+  "mail_not_sent": "Die Nachricht konnte nicht versendet werden.",
+  "email_not_found": "E-Mail-Adresse wurde in der Datenbank nicht gefunden.",
+  "captcha_alert": "Bitte verifiziere, dass Du ein Mensch bist."
+}

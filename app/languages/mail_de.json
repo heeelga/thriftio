@@ -1,0 +1,5 @@
+{
+    "subject": "Dein Finance-Account",
+    "body_html": "<p>Hallo {vorname},</p><p>Willkommen zu <b>{base_url}.</b></p><br><p>Bekomme ab heute Deine Finanzen in den Griff!</p><br>{base_url}<br><p>Dein Benutzername lautet: <b>{name}</b></p><p>Dein Passwort lautet: <b>{password}</b><br></p><p><b>Bitte ändere es in Deinem Kontobereich ab!</b></p><br><p>Bei Fragen oder Problemen kontaktiere mich bitte über meine persönliche Email-Adresse <a href=\"mailto:{smtp_replyto}\">{smtp_replyto}</a>!</p><br><p>VG der Thriftio Admin</p>",
+    "body_text": "Hallo {vorname},\nWillkommen zu Finance.aerify.de.\nBekomme ab heute Deine Finanzen in den Griff!\n{base_url}\nDein Benutzername lautet: {name}\nDein Passwort lautet: {password}\nBitte ändere es in Deinem Kontobereich ab!\n\nBei Fragen oder Problemen kontaktiere mich bitte über meine persönliche Email-Adresse: {smtp_replyto}\n\nVG der Thriftio Admin"
+}

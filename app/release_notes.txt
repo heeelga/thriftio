@@ -1,0 +1,3 @@
+- Suchfunktion komplett überarbeitet
+- Kleinere Designanpassungen
+- Einige Bugs zerquetscht

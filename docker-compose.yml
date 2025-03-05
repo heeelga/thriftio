@@ -1,0 +1,56 @@
+services:
+  app:
+    build: .
+    container_name: financeapp
+    restart: unless-stopped
+    ports:
+      - "8080:80"                                    #You can set 8080 to another port if needed
+    volumes:
+      - ./app:/var/www/html
+      - php_session_volume:/var/lib/php/sessions
+    depends_on:
+      - db
+    environment:
+      LANGUAGE: de                                   #en and de are available for now
+      CURRENCY: €
+      DOMAIN: ${DOMAIN}                              #Your domain where you're hosting your service e.g. "thriftio.example.com"
+      DB_HOST: db
+      MYSQL_DATABASE: finance
+      MYSQL_USER: finance_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}              #SUPERSECUREPASSWORDOFYOURCHOICE
+      APP_USER: ${APP_USER}                          #This is your app username, change it as you like
+      APP_PASSWORD: ${APP_PASSWORD}                  #This is your INITIAL app password, it has to be changed after the first login
+      APP_FIRSTNAME: ${APP_FIRSTNAME}                #This is your display name, change it as you like
+      APP_EMAIL: ${APP_EMAIL}                        #This is your app mailaddress, change it as you like
+      PUSHOVER_USER_TOKEN: ${PUSHOVER_USER_TOKEN}    #optional, Pushover is used to inform you about (failed)logins
+      PUSHOVER_APP_TOKEN: ${PUSHOVER_APP_TOKEN}      #optional, Pushover is used to inform you about (failed)logins
+      TURNSTILE_SITEKEY: ${TURNSTILE_SITEKEY}
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET}
+
+                                                     #SMTP configuration to invite people and reset passwords via email
+
+      SMTP_HOST: ${SMTP_HOST}                        #Your SMTP Relay Server
+      SMTP_USER: ${SMTP_USER}                        #Your SMTP user
+      SMTP_PASSWORD: ${SMTP_PASSWORD}                #Your SMTP password
+      SMTP_SENDER: ${SMTP_SENDER}                    #Your SMTP sender
+      SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}          #Your SMTP sender name
+      SMTP_REPLYTO: ${SMTP_REPLYTO}                  #Your replyto email
+      SMTP_REPLYTO_NAME: ${SMTP_REPLYTO_NAME}        #Your replyto name
+      command: sh -c "php /var/www/html/setup.php && rm -f /var/www/html/setup.php && docker-php-entrypoint apache2-foreground"
+
+  db:
+    image: mariadb:10.5
+    container_name: financedb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}    #SUPERSECUREPASSWORDOFYOURCHOICE2
+      MYSQL_DATABASE: finance
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}              #SUPERSECUREPASSWORDOFYOURCHOICE
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  db_data:
+  php_session_volume:

@@ -1,0 +1,16 @@
+{
+  "page_title": "Reset Password",
+  "reset_password": "Reset Password",
+  "your_email": "Your E-Mail Address",
+  "submit": "Submit",
+  "back_to_login": "Back to Login",
+  "captcha_missing": "Please confirm that you are not a robot.",
+  "captcha_failed": "Captcha verification failed.",
+  "mail_subject": "Your ThriftIO Account",
+  "mail_body_html": "<p>Hello %s,</p><p>Your ThriftIO account password has been reset.</p><br><p>Your new username is: <b>%s</b></p><p>Your new password is: <b>%s</b><br></p><p>Please change it as soon as possible!</p><p>If you did not request a password reset,</p><p>please send an email to <a href=\"mailto:post@markusneuhaus.de\">post@markusneuhaus.de</a>!</p><br><p>Regards, your ThriftIO Admin</p>",
+  "mail_body_alt": "Hello %s,\n\nYour ThriftIO account password has been reset.\n\nYour new username is: %s\nYour new password is: %s\nPlease change it as soon as possible!\nIf you did not request a password reset,\nplease send an email to post@markusneuhaus.de!\n\nRegards, your ThriftIO Admin",
+  "mail_sent": "The message has been sent.",
+  "mail_not_sent": "The message could not be sent.",
+  "email_not_found": "E-Mail address not found in database.",
+  "captcha_alert": "Please solve the Turnstile challenge."
+}

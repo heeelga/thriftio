@@ -1,0 +1,2083 @@
+<style>
+#background.blurred {
+  filter: blur(5px);
+  transition: filter 0.3s ease;
+}
+
+
+/* Container für die Auswahl */
+.entry-content {
+    margin-top: 15px;
+}
+
+/* Container für die Auswahl */
+.entry-type-selection {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+/* Basis-Button-Stil */
+.entry-type-btn {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background 0.3s, border 0.3s, opacity 0.3s;
+}
+
+/* Einnahme Button */
+.entry-type-income {
+    background-color: #28a745 !important; /* Dunkelgrün */
+    color: white !important;
+    border-radius: 10px 0 0 10px;
+}
+
+/* Ausgabe Button */
+.entry-type-expense {
+    background-color: #dc3545 !important; /* Dunkelrot */
+    color: white !important;
+    border-radius: 0 10px 10px 0;
+}
+
+/* Light Mode: Helleres Grün & Rot mit schwarzer Schrift */
+@media (prefers-color-scheme: light) {
+    .entry-type-income {
+        background-color: #a8e6a2 !important; /* Hellgrün */
+        color: black !important;
+    }
+
+    .entry-type-expense {
+        background-color: #f8a5a5 !important; /* Hellrot */
+        color: black !important;
+    }
+}
+
+/* Hover-Effekte */
+.entry-type-btn:hover {
+    filter: brightness(90%) !important;
+}
+
+/* Aktiver Button */
+.entry-type-btn.active {
+    border: 2px solid black !important;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2) !important;
+    opacity: 1 !important; /* Voll sichtbar */
+}
+
+/* Inaktiver Button (ausgegraut) */
+.entry-type-btn.inactive {
+    opacity: 0.5 !important;
+    //cursor: not-allowed !important;
+    filter: grayscale(50%) !important;
+}
+
+
+/* Container für Schieberegler und Icons */
+.theme-toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px; /* Weniger Abstand zwischen den Icons und dem Schalter */
+  margin-left: 10px; /* Abstand vom linken Rand der Menubar */
+  margin-right: 20px; /* Abstand zur nächsten Sektion */
+}
+
+.theme-toggle-container i {
+  font-size: 18px; /* Größe der Icons bleibt gleich */
+  color: var(--text-color); /* Farbe passend zum Theme */
+}
+
+        .action-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.1s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px); /* Verschiebung angepasst */
+}
+
+/* Dark Theme für die Icons */
+.dark-theme .theme-toggle-container i {
+  color: #ffffff;
+}
+
+        .action-btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background-color: #007BFF;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.1s ease, transform 0.1s ease;
+        }
+
+        .action-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+
+        .action-btn:active {
+            transform: scale(1);
+        }
+        
+    .backup-item {
+        color: white;
+        font-size: 16px;
+        margin: 10px 0;
+        background-color: #333;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    .backup-actions {
+//        margin-top: 20px;
+//        margin-left: 20px;
+    }
+
+    .restore-btn, .delete-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 5px;
+    }
+
+    .delete-btn {
+        background-color: #dc3545;
+    }
+
+    .restore-btn:hover {
+        background-color: #0056b3;
+    }
+
+    .delete-btn:hover {
+        background-color: #c82333;
+    }
+
+/* Standardmäßig: Menü ausgeblendet (mobile Endgeräte) */
+.menu-bar,
+#menu-links {
+    display: none;
+}
+
+/* Ab einer Bildschirmbreite von 768px (Desktop) wird das Menü automatisch eingeblendet */
+@media only screen and (min-width: 768px) {
+    .menu-bar,
+    #menu-links {
+        display: block; /* oder flex, je nachdem, was für dein Layout passend ist */
+    }
+}
+
+
+#suggestion-overlay {
+    display: none; /* Standardmäßig unsichtbar */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.suggestion-modal {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 500px;
+    margin: 50px auto;
+    position: relative;
+    text-align: left;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
+    /* Close Button */
+    #closeGitPullOverlay {
+        float: right;
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+
+/* Standard-Stile für beide Buttons (Lupe und Filter) */
+.search-button {
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    /* Größe und Form */
+    width: 40px;               
+    height: 40px;
+    border-radius: 50%;        /* Kreisrund */
+    margin: 0 5px;             /* Abstände zwischen Buttons */
+    padding: 0;
+    /* Zentriert das Icon innerhalb des Kreises */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Animation */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    /* Schriftgröße etc. nach Bedarf */
+    font-size: 1.2rem;
+    
+    /* Beispiel-Farbe (Light Mode). 
+       Wenn du in Light Mode schwarz willst, setze sie hier auf black. */
+    color: rgb(255, 255, 255); 
+}
+
+/* Hover-Effekt: leichte Hintergrundfärbung + Skalierung */
+.search-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+}
+
+/* Im Dark Mode ggf. Button-Farbe ändern */
+body.dark-theme .search-button {
+    color: #fff; /* Weiß im Dark Mode */
+}
+
+/* Optional: Sicherstellen, dass das Icon (i) Hover-Events nicht abfängt */
+.search-button i {
+    pointer-events: none;
+}
+
+/* Fokus-Stil verhindern (falls gewünscht) */
+.search-button:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+
+
+
+
+
+/* Standardfarbe und Stil für Tabellenzellen */
+h4 {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+    font-size: 1.0em; /* Kleiner als h3 */
+    font-weight: normal; /* Kein Fettdruck */
+    color: #000; /* Standardfarbe für Light Mode */
+}
+
+/* Dark Mode: Farbe und Stil der Tabellenzellen */
+.dark-theme h4 {
+    color: #fff; /* Weiß für bessere Lesbarkeit im Dark Mode */
+}
+
+
+/* Standardfarbe für Überschriften */
+h3 {
+    color: #000; /* Standardfarbe für Light Mode */
+}
+
+/* Farbe für Dark Mode */
+.dark-theme h3 {
+    color: #fff; /* Weiß für bessere Lesbarkeit im Dark Mode */
+}
+
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background-color: #ffffff;
+        border-bottom: 1px solid #d2d2d7;
+    }
+
+/* Aktueller Monat Button */
+    .current-month-button {
+        padding: 8px 12px;
+        border: none;
+        background-color: #007aff;
+        color: white;
+        font-size: 14px;
+        cursor: pointer;
+        margin-left: 10px;
+    }
+    .current-month-button:hover {
+        background-color: #005bb5;
+    }
+
+
+/* Eintragsboxen */
+
+/* Titel der Eintragsbox */
+.entry-box .entry-title {
+    font-size: 14px; /* Kleinere Schriftgröße */
+    font-weight: bold;
+    margin-bottom: 3px; /* Weniger Abstand zum nächsten Element */
+}
+
+/* Betrag der Eintragsbox */
+.entry-box .entry-amount {
+    font-size: 16px; /* Kleinere Schriftgröße */
+    font-weight: bold;
+    margin-bottom: 3px; /* Weniger Abstand */
+}
+
+/* Beschreibung oder Zusatzinfos */
+.entry-box .entry-regular {
+    font-size: 14px; /* Kleinere Schriftgröße */
+   // color: #555;
+}
+
+/* Beschreibung oder Zusatzinfos */
+.entry-box .entry-end {
+    position: absolute;
+    top: 7px;
+    left: 25px;
+    font-size: 10px;
+    color: #888;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 2px 5px;
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Beispiel: Extra-Spezifizität und !important */
+.entry-box.highlight-blink {
+  animation: highlightFlash 0.5s ease-in-out 0s 4 alternate !important;
+}
+
+@keyframes highlightFlash {
+  0%, 100% {
+    background-color: yellow !important;
+  }
+  50% {
+    background-color: red !important;
+  }
+}
+
+
+.entry-date {
+    position: absolute;
+    bottom: 25px;
+    right: 10px;
+    font-size: 10px;
+    color: #888;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 2px 5px;
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Einnahmen und Ausgaben Styling */
+.income {
+    background-color: #e6f8e0; /* Helles Grün */
+    border: 1px solid #38a169; /* Dunkleres Grün */
+}
+.income .entry-amount {
+    color: #38a169;
+}
+.expense {
+    background-color: #fdeaea; /* Helles Rot */
+}
+.expense .entry-amount {
+    color: #e53e3e;
+}
+
+/* Modale für Bearbeiten und Hinzufügen */
+.modal {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+.modal h2 {
+    margin-top: 0;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+}
+.modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Einheitlicher Abstand zwischen Elementen */
+}
+.modal form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.modal form input,
+.modal form select,
+.modal form button {
+    padding: 10px;
+    border: 1px solid #d2d2d7;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+.modal form button {
+    background-color: #007aff;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.modal form button:hover {
+    background-color: #005bb5;
+}
+
+
+/* Aktionen (Bearbeiten & Löschen) */
+.entry-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+.entry-actions button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.edit-button {
+    background-color: #007aff;
+    color: white;
+}
+
+.edit-button:hover {
+    background-color: #005bb5;
+}
+
+.savings-edit-button {
+    background-color: #007aff;
+    color: white;
+}
+
+.savings-edit-button:hover {
+    background-color: #005bb5;
+}
+
+.rebooking-edit-button {
+    background-color: #007aff;
+    color: white;
+}
+
+.rebooking-edit-button:hover {
+    background-color: #005bb5;
+}
+
+
+.edit-single-button {
+    background-color: #3ADF00;
+    color: white;
+}
+
+.edit-single-button:hover {
+    background-color: #3ADF00;
+}
+
+
+.delete-button {
+    background-color: #e53e3e;
+    color: white;
+}
+
+.delete-button:hover {
+    background-color: #c53030;
+}
+
+.edit-single-rebooking-button {
+    background-color: #3ADF00;
+    color: white;
+}
+
+.edit-single-rebooking-button:hover {
+    background-color: #3ADF00;
+}
+
+
+.home-button {
+    display: inline-block; /* Verhindert, dass der Button die volle Breite einnimmt */
+    text-align: center; /* Zentriert den Inhalt */
+    margin: 10px auto; /* Zentriert den Button vertikal und horizontal */
+    padding: 0; /* Entfernt jegliche Innenabstände */
+    border: none; /* Keine Umrandung */
+    box-shadow: none; /* Kein Schatten */
+}
+
+.home-button a {
+    display: inline-block; /* Blockdarstellung für mehr Kontrolle */
+    padding: 10px 20px; /* Innenabstand */
+    text-decoration: none; /* Entfernt Unterstreichung */
+    border: none; /* Keine Umrandung */
+    border-radius: 12px; /* Abgerundete Ecken */
+    background-color: #007BFF; /* Blau (Bootstrap-ähnlich) */
+    color: white; /* Textfarbe */
+    font-size: 14px; /* Schriftgröße */
+    //font-weight: bold; /* Fettgedruckt */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Leichter Schatten */
+    transition: all 0.3s ease; /* Sanfter Übergang für Hover */
+    outline: none; /* Entfernt Fokusrahmen */
+    overflow: hidden; /* Verhindert visuelle Überlappungen */
+}
+
+.home-button a:hover {
+    background-color: #0056b3; /* Dunkleres Blau bei Hover */
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Stärkerer Schatten bei Hover */
+}
+
+.home-button a:focus,
+.home-button a:active {
+    outline: none; /* Entfernt Fokusrahmen */
+    border: none; /* Keine sichtbare Umrandung */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Optional: Fokusglanz */
+}
+
+
+.total-container {
+  background-color: #f0f0f0; /* Heller Hintergrund für den Light Mode */
+  color: #000000; /* Dunkle Schrift für den Light Mode */
+  padding: 5px;
+  font-size: 14px; 
+  text-align: left;
+  font-weight: bold;
+  transition: background-color 0.3s, color 0.3s; /* Sanfter Übergang */
+  z-index:1000;
+}
+
+.dark-theme .total-container {
+  background-color: #222222; /* Dunkler Hintergrund für den Dark Mode */
+  color: #ffffff; /* Helle Schrift für besseren Kontrast */
+}
+
+
+/* Standard-Textfarbe für positive Beträge */
+.total-box span {
+    color: inherit; /* Übernimmt die Textfarbe des Containers */
+}
+
+/* Negative Beträge */
+.total-box span.negative {
+    color: #ff0000; /* Rot für Light Mode */
+}
+
+/* Negative Beträge im Dark Mode */
+.dark-theme .total-box span.negative {
+    color: #ff6b6b; /* Helleres Rot für Dark Mode */
+}
+
+
+.total-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  margin-bottom: 8px;
+  position: relative;
+  padding: 8px;
+  color: #000000; /* Standardfarbe für den Text */
+  background-color: var(--background-color); /* Theme-Hintergrund */
+  border: 1px solid #ccc; /* Optional: Rahmen */
+  z-index: 100;
+}
+
+.total-box .savings-interest-rate {
+    position: absolute; /* Ermöglicht die Platzierung am Rand */
+    bottom: 5px; /* Abstand vom unteren Rand */
+    right: 10px; /* Abstand vom rechten Rand */
+    font-size: 10px; /* Kleinere Schriftgröße */
+    color: #888; /* Dezente Farbgebung */
+    background-color: rgba(255, 255, 255, 0.8); /* Leichter Hintergrund */
+    padding: 2px 5px; /* Innenabstand für bessere Lesbarkeit */
+    border-radius: 3px; /* Abgerundete Ecken */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Optional: leichter Schatten */
+    z-index: 100;
+}
+
+.total-box button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.total-box .currency {
+  color: #000000; /* Feste Farbe für den Betrag */
+}
+
+/* Für den Dark Mode */
+.dark-theme .total-box {
+  background-color: #222222;
+  color: #ffffff;
+}
+
+.dark-theme .total-box .currency {
+  color: #ffffff; /* Feste Farbe für den Betrag im Dark Mode */
+}
+
+
+:root {
+  --background-color: #ffffff;
+  --text-color: #000000;
+  //--background-image: url('images/magicpattern-oPH_5xuMgQw-unsplash.jpg'); /* Hintergrund für Light Mode */
+}
+
+.dark-theme {
+  --background-color: #252424;
+  --text-color: #ffffff;
+  //--background-image: url('images/pexels-cottonbro-9665214.jpg'); /* Hintergrund für Dark Mode */
+}
+
+.entry-box, .total-box {
+  color: #000000; /* Feste Schriftfarbe */
+  background: linear-gradient(to bottom, var(--background-color), #f0f0f0); /* Dezenter Farbverlauf */
+  border: 1px solid #ccc; /* Optional: Rahmen für bessere Abgrenzung */
+  border-radius: 10px; /* Runde Ecken */
+  padding: 1rem; /* Mehr Platz für Inhalte */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Dezente Schattierung */
+  transition: transform 0.2s ease, box-shadow 0.2s ease; /* Sanfte Übergänge */
+}
+
+.entry-box:hover, .total-box:hover {
+  transform: scale(1.02); /* Leichte Vergrößerung beim Hover */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Intensivere Schattierung beim Hover */
+}
+
+.dark-theme .entry-box, .dark-theme .total-box {
+  background: linear-gradient(to bottom, #2a2a2a, #3a3a3a); /* Dezenter Farbverlauf für Dark Mode */
+  color: #ffffff; /* Helle Schriftfarbe für besseren Kontrast */
+  border: 1px solid #555555; /* Rahmen anpassen */
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .entry-box:hover, .dark-theme .total-box:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+}
+
+
+body {
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f7;
+  color: #1d1d1f;
+  margin-bottom: 50px; /* Platz für die fixierte Gesamtsumme */  
+  background-color: var(--background-color);
+  //color: var(--text-color);
+  background-size: cover; /* Skaliert das Bild, sodass es den gesamten Bereich abdeckt */
+  background-repeat: no-repeat; /* Verhindert Wiederholungen */
+  background-position: center; /* Zentriert das Bild */
+  transition: background-color 0.1s, color 0.1s, background-image 0.1s; /* Übergang für den Wechsel */
+}
+
+
+@keyframes highlight-animation {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+
+.edit-category-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #555;
+    padding: 2px;
+}
+
+.edit-category-btn:hover {
+    color: #000;
+}
+
+.current-category {
+    display: inline-block;
+    margin-right: 20px; /* Platz für den Button */
+    font-size: 14px;
+    color: #333;
+}
+
+
+.override-icon {
+    position: absolute;
+    top: 5px; /* Gleiche Höhe wie das wiederkehrende Symbol */
+    left: 25px; /* Rechts neben dem wiederkehrenden Symbol */
+    background-color: rgba(255, 193, 7, 0.1); /* Optionaler Hintergrund */
+    color: #ff0707;
+    font-size: 10px; /* Text halb so groß */
+    border-radius: 50%; /* Runde Form bleibt */
+    padding: 2px; /* Kleinerer Innenabstand */
+    width: 15px; /* Feste Breite für konsistente Größe */
+    height: 15px; /* Feste Höhe für konsistente Größe */
+    display: flex;
+    align-items: center; /* Zentrierung des Inhalts */
+    justify-content: center; /* Zentrierung des Inhalts */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Kleinerer Schatten */
+}
+
+
+/* Standard-Overlay (Light Mode) */
+#release-notes-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1300;
+}
+
+/* Modal (Light Mode) */
+#release-notes-overlay .release-modal {
+    background: #fff; /* Weißer Hintergrund */
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 90%;
+    text-align: center;
+    position: relative;
+    color: #000; /* Schwarze Schrift */
+}
+
+/* Close-Button (Light Mode) */
+#close-release-notes {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ccc; /* Grauer Hintergrund */
+    color: #fff; /* Weiße Schrift */
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    text-align: center;
+    line-height: 30px;
+}
+
+#close-release-notes:hover {
+    background-color: #888; /* Dunkleres Grau beim Hover */
+}
+
+/* Dark Mode-Overlay */
+.dark-theme #release-notes-overlay {
+    background-color: rgba(34, 34, 34, 0.9); /* Dunklerer Hintergrund */
+
+}
+
+/* Dark Mode-Modal */
+.dark-theme #release-notes-overlay .release-modal {
+    background: #222; /* Dunkler Hintergrund */
+    color: #fff; /* Helle Schrift */
+    border: 1px solid #444; /* Leicht sichtbare Rahmenfarbe */
+}
+
+/* Close-Button (Dark Mode) */
+.dark-theme #close-release-notes {
+    background-color: #555; /* Dunklerer Hintergrund */
+    color: #fff; /* Weiße Schrift */
+}
+
+.dark-theme #close-release-notes:hover {
+    background-color: #888; /* Leichtes Grau beim Hover */
+}
+
+
+
+.savings-delete-button {
+    background-color: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+    margin-right: 10px; /* Falls zusätzlicher Abstand benötigt wird */
+}
+
+.savings-delete-button:hover {
+    background-color: #c53030;
+}
+
+.savings-delete-button i {
+    font-size: 12px;
+}
+
+.savings-edit-button {
+    background-color: #007aff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+    margin-right: 10px; /* Falls zusätzlicher Abstand benötigt wird */
+}
+
+.savings-edit-button:hover {
+    background-color: #007aff;
+}
+
+.savings-edit-button i {
+    font-size: 12px;
+}
+
+/* Vorschlags-Overlay */
+#suggestion-overlay {
+    display: none; /* Standardmäßig ausgeblendet */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Halbtransparenter Hintergrund */
+    border: 1px solid #444; /* Leicht sichtbare Rahmenfarbe */
+    z-index: 1300; /* Überlagert andere Inhalte */
+    justify-content: center;
+    align-items: center;
+}
+
+/* Vorschlagsmodal */
+.suggestion-modal {
+    background: #fff; /* Standard: Heller Hintergrund */
+    width: 90%;
+    border: 1px solid #444; /* Leicht sichtbare Rahmenfarbe */
+    max-width: 500px; /* Begrenzung der Breite auf großen Geräten */
+    padding: 20px;
+    border-radius: 10px; /* Abgerundete Ecken für Desktop */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    position: relative;
+    overflow-y: auto; /* Scrollen bei Überlauf */
+    color: #000; /* Standard: Dunkle Schrift */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode für das Overlay */
+.dark-theme #suggestion-overlay {
+    background-color: rgba(34, 34, 34, 0.9); /* Dunkler Halbtransparenter Hintergrund */
+}
+
+/* Dark Mode für das Modal */
+.dark-theme .suggestion-modal {
+    background: #222; /* Dunkler Hintergrund */
+    color: #fff; /* Helle Schrift */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5); /* Dunkler Schatten */
+}
+
+/* Dark Mode für Textinput im Modal */
+.dark-theme .suggestion-modal input,
+.dark-theme .suggestion-modal textarea {
+    color: #000 !important; /* Schwarze Schrift im Dark Mode */
+}
+
+
+/* Anpassung von Buttons und Eingaben im Modal */
+.suggestion-modal button,
+.suggestion-modal input,
+.suggestion-modal textarea {
+    background-color: #fff; /* Heller Hintergrund im Standard */
+    color: #000; /* Dunkle Schrift im Standard */
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dark-theme .suggestion-modal button,
+.dark-theme .suggestion-modal input,
+.dark-theme .suggestion-modal textarea {
+    background-color: #333; /* Dunkler Hintergrund im Dark Mode */
+    color: #fff; /* Helle Schrift im Dark Mode */
+    border: 1px solid #444;
+}
+
+
+/* Schließen-Button */
+.suggestion-modal .close-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #ccc;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 20px;
+    line-height: 40px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    z-index: 1001; /* Sicherstellen, dass der Button über dem Inhalt liegt */
+}
+
+.suggestion-modal .close-button:hover {
+    background-color: #555; /* Dunklere Farbe beim Hover */
+}
+
+/* Dropdown */
+#feedback-type {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease;
+}
+
+#feedback-type:focus {
+    border-color: #007aff;
+    outline: none;
+}
+
+/* Textfeld */
+#suggestion-text {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: none;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease;
+}
+
+#suggestion-text:focus {
+    border-color: #007aff;
+    outline: none;
+}
+
+/* Absenden-Button */
+#submit-suggestion {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007aff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#submit-suggestion:hover {
+    background-color: #005bb5;
+}
+
+#submit-suggestion:focus {
+    outline: none;
+}
+
+/* Mobile Ansicht */
+@media (max-width: 768px) {
+    #suggestion-overlay {
+        justify-content: flex-start; /* Modal-Inhalt oben positionieren */
+    }
+
+    .suggestion-modal {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        box-sizing: border-box;
+    }
+
+    .suggestion-modal h2 {
+        margin-top: 40px; /* Überschrift Abstand vom oberen Rand */
+        margin-bottom: 10px; /* Weniger Abstand zur nächsten Komponente */
+        text-align: center; /* Zentriert die Überschrift */
+    }
+
+    #suggestion-form {
+        width: 100%;
+    }
+
+    #feedback-type,
+    #suggestion-text,
+    #submit-suggestion {
+        margin-bottom: 10px; /* Verringerter Abstand zwischen den Feldern */
+    }
+
+    .suggestion-modal .close-button {
+        top: 15px;
+        right: 15px;
+        font-size: 24px;
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+    }
+}
+
+
+/* ID-Anzeige unten rechts */
+.entry-id {
+    position: absolute; /* Ermöglicht die Platzierung am Rand */
+    bottom: 5px; /* Abstand vom unteren Rand */
+    right: 10px; /* Abstand vom rechten Rand */
+    font-size: 10px; /* Kleinere Schriftgröße */
+    color: #888; /* Dezente Farbgebung */
+    background-color: rgba(255, 255, 255, 0.8); /* Leichter Hintergrund */
+    padding: 2px 5px; /* Innenabstand für bessere Lesbarkeit */
+    border-radius: 3px; /* Abgerundete Ecken */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Optional: leichter Schatten */
+}
+
+
+.total-box.positive-balance {
+    color: #28a745; /* Grün */
+}
+
+.total-box.negative-balance {
+    color: #dc3545; /* Rot */
+}
+
+
+/* Allgemeine Stile */
+#floating-action-buttons {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    z-index: 1200;
+}
+
+@media (min-width: 1024px) {
+    .floating-action-buttons {
+        right: 320px; /* Verschiebt den Button weiter nach links auf größeren Bildschirmen */
+    }
+}
+
+
+/* Plus-Button */
+.fab {
+    position: fixed; /* Flexbox aktivieren */
+    justify-content: center; /* Horizontale Zentrierung */
+    align-items: center; /* Vertikale Zentrierung */
+    background-color: #007aff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    right: 20px;
+    bottom: 80px;
+    height: 60px;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    text-align: center; /* Textausrichtung */
+    line-height: 60px; /* Gleiche Höhe wie der Button, für bessere Zentrierung */
+    padding: 0; /* Entferne Padding, um Verschiebungen zu vermeiden */
+    box-sizing: border-box; /* Sorgt dafür, dass Breitenberechnungen korrekt sind */
+    z-index: 900;
+    opacity: 0.7;
+}
+
+
+/* Desktop: Positionierung relativ zum Menü */
+@media (min-width: 1024px) {
+    .fab {
+        right: calc(13% + 20px);
+    }
+}
+
+
+
+.fab:hover {
+    background-color: #005bb5;
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+/* Optionen (Floating Buttons) */
+.fab-options {
+    position: fixed;
+    display: flex; /* Wichtig: als Flexbox, damit gap etc. wirken */
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    bottom: 160px;
+    right: 20px;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 900;
+}
+.fab-options.show {
+    opacity: 1;
+    transform: scale(1);
+}
+.fab-options.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Desktop: Positionierung relativ zum Menü, aber mit festem vertikalen Abstand */
+@media (min-width: 1024px) {
+    .fab-options {
+        position: fixed; /* oder absolute, falls passend */
+        right: calc(13% + 20px);
+        bottom: 160px; /* fester Abstand */
+    }
+}
+
+/* Styling der Buttons */
+.fab-option {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #007aff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    text-align: center;
+    line-height: 50px;
+    padding: 0;
+    box-sizing: border-box;
+    position: relative; /* für die absolute Positionierung der Labels */
+}
+
+/* Beschriftungen als kleine Label-Elemente */
+.fab-label {
+    display: none;
+    position: absolute;
+    right: 100%;
+    margin-right: 10px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Wenn die Klasse "show-labels" im Container gesetzt ist, werden alle Labels eingeblendet */
+.fab-options.show-labels .fab-label {
+    display: inline-block;
+    opacity: 1;
+}
+
+/* Spezifische Farben für Buttons */
+#add-entry {
+    background-color: #28a745; /* Grün */
+}
+
+#add-entry:hover {
+    background-color: #218838; /* Dunkleres Grün beim Hover */
+}
+
+#add-savings {
+    background-color: #ff85b3; /* Leichtes Rosa */
+}
+
+#add-savings:hover {
+    background-color: #e0709a; /* Dunkleres Rosa beim Hover */
+}
+
+/* Button für Alle Einträge einblenden */
+#unhide-all {
+    background-color: #ffc107; /* Leichtes Gelb */
+    color: white;
+    display: flex; /* Flexbox aktivieren */
+    justify-content: center; /* Horizontale Zentrierung */
+    align-items: center; /* Vertikale Zentrierung */
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Schatteneffekt */
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+#unhide-all:hover {
+    background-color: #e0a800; /* Dunkleres Gelb beim Hover */
+    transform: scale(1.1); /* Leichte Vergrößerung beim Hover */
+}
+
+
+
+/* Hover-Effekt für alle anderen Option-Buttons */
+.fab-option:hover {
+    transform: scale(1.1);
+}
+
+
+.fab i,
+.fab-option i {
+    pointer-events: none;
+    font-size: inherit; /* Nutzt die Schriftgröße des übergeordneten Elements */
+}
+
+
+
+
+.recurring-icon {
+    position: absolute;
+    top: 5px; /* Angepasst, damit es besser positioniert ist */
+    left: 5px;
+    background-color: rgba(0, 123, 255, 0.1); /* Optionaler Hintergrund */
+    color: #007BFF;
+    font-size: 10px; /* Text halb so groß */
+    border-radius: 50%; /* Runde Form bleibt */
+    padding: 2px; /* Kleinerer Innenabstand */
+    width: 15px; /* Feste Breite für konsistente Größe */
+    height: 15px; /* Feste Höhe für konsistente Größe */
+    display: flex;
+    align-items: center; /* Zentrierung des Inhalts */
+    justify-content: center; /* Zentrierung des Inhalts */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Kleinerer Schatten */
+}
+
+.rebooking-icon {
+    position: absolute;
+    top: 5px; /* Angepasst, damit es besser positioniert ist */
+    right: 5px;
+    background-color: rgba(0, 123, 255, 0.1); /* Optionaler Hintergrund */
+    color: #007BFF;
+    font-size: 10px; /* Text halb so groß */
+    border-radius: 50%; /* Runde Form bleibt */
+    padding: 2px; /* Kleinerer Innenabstand */
+    width: 15px; /* Feste Breite für konsistente Größe */
+    height: 15px; /* Feste Höhe für konsistente Größe */
+    display: flex;
+    align-items: center; /* Zentrierung des Inhalts */
+    justify-content: center; /* Zentrierung des Inhalts */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Kleinerer Schatten */
+}
+
+
+.infinite-icon {
+    position: absolute;
+    top: 5px; /* Angepasst, damit es besser positioniert ist */
+    left: 25px;
+    background-color: rgba(0, 123, 255, 0.1); /* Optionaler Hintergrund */
+    color: #007BFF;
+    font-size: 10px; /* Text halb so groß */
+    border-radius: 50%; /* Runde Form bleibt */
+    padding: 2px; /* Kleinerer Innenabstand */
+    width: 15px; /* Feste Breite für konsistente Größe */
+    height: 15px; /* Feste Höhe für konsistente Größe */
+    display: flex;
+    align-items: center; /* Zentrierung des Inhalts */
+    justify-content: center; /* Zentrierung des Inhalts */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Kleinerer Schatten */
+}
+
+
+/* Gemeinsame Positionierung für beide Container */
+#add-savings-container,
+#unhide-all-container {
+    position: fixed;
+    bottom: 180px;
+    right: 20px; /* Abstand von der rechten Seite */
+    gap: 10px;
+    z-index: 1000;
+}
+
+/* Neues Sparkonto Button */
+#add-savings-container {
+    bottom: 200px; /* Abstand vom unteren Rand */
+}
+
+/* Alle Einblenden Button */
+#unhide-all-container {
+    bottom: 270px; /* Über dem Sparkonto-Button */
+}
+
+.savings-button {
+    display: flex; /* Flexbox für präzise Zentrierung */
+    align-items: center; /* Vertikale Zentrierung */
+    justify-content: center; /* Horizontale Zentrierung */
+    background-color: #007aff; /* Gleiche Farbe wie der Plus-Button */
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.savings-button:hover {
+    background-color: #005bb5; /* Hover-Farbe */
+    transform: scale(1.1); /* Vergrößern beim Hover */
+}
+
+.savings-button i {
+    pointer-events: none;
+    font-size: 24px; /* Größe des Icons */
+}
+
+
+
+/* Standard-Stile für Overlays */
+.overlay {
+    position: fixed; /* Vollbildüberlagerung */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Transparenter schwarzer Hintergrund */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1300;
+}
+
+/* Stile für das Modal */
+.modal {
+    position: relative; /* Hierdurch wird der Close-Button relativ zum Modal positioniert */
+    background-color: #fff; /* Heller Hintergrund für Standard */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    max-width: 500px; /* Maximale Breite */
+    width: 90%; /* Breite auf mobilen Geräten */
+    color: #000; /* Standard Schriftfarbe */
+}
+
+/* Dark Mode für das Overlay */
+.dark-theme .overlay {
+    background-color: rgba(34, 34, 34, 0.9); /* Dunklerer Hintergrund für Dark Mode */
+}
+
+/* Dark Mode für das Modal */
+.dark-theme .modal {
+    background-color: #222; /* Dunkler Hintergrund */
+    color: #fff; /* Helle Schrift */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Angepasster Schatten */
+    border: 1px solid #444; /* Leicht sichtbare Rahmenfarbe */
+}
+
+/* Eingaben und Buttons im Modal */
+.modal input,
+.modal button,
+.modal textarea {
+    background-color: #fff; /* Heller Hintergrund im Standard */
+    color: #000; /* Dunkle Schrift im Standard */
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dark-theme .modal input,
+.dark-theme .modal button,
+.dark-theme .modal textarea {
+    background-color: #333; /* Dunkler Hintergrund für Dark Mode */
+    color: #fff; /* Helle Schrift für Dark Mode */
+    border: 1px solid #444;
+}
+
+/* Mobile Geräte Anpassungen */
+@media screen and (max-width: 768px) {
+    .overlay {
+        justify-content: flex-start; /* Modal oben positionieren */
+    }
+
+    .modal {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        padding: 15px;
+        max-height: 100%;
+    }
+
+    .close-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 24px;
+        cursor: pointer;
+    }
+}
+
+/* Standard-Button-Stile */
+.modal button {
+    background-color: #007bff; /* Blau als Standardfarbe */
+    color: #fff; /* Weiße Schrift */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+/* Button beim Hover */
+.modal button:hover {
+    background-color: #0056b3; /* Dunkleres Blau beim Hover */
+}
+
+/* Dark Mode: Button bleibt blau */
+.dark-theme .modal button {
+    background-color: #007bff; /* Blau bleibt erhalten */
+    color: #fff;
+    border: none;
+}
+
+.dark-theme .modal button:hover {
+    background-color: #0056b3; /* Auch im Dark Mode dunkleres Blau beim Hover */
+}
+
+
+
+.rebooking-button {
+    font-size: 24px;
+    background-color: #007bff; /* Blaue Farbe für den Umbuchungsbutton */
+    color: white;
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: fixed;
+    bottom: 120px; /* Position über dem + Button */
+    right: 20px; /* Abstand von rechts */
+}
+
+.rebooking-button:hover {
+    background-color: #0056b3; /* Dunkleres Blau beim Hover */
+}
+
+
+/* Angepasster Close-Button */
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 10px;
+    width: 30px; /* Größe des Buttons */
+    height: 30px;
+    background-color: #ccc; /* Grauer Hintergrund */
+    color: #000; /* Schwarzes "X" */
+    font-size: 24px; /* Schriftgröße für das "X" */
+    border: none;
+    border-radius: 50%; /* Runde Form */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Leichter Schatten */
+    transition: background-color 0.3s ease; /* Weicher Hover-Effekt */
+}
+
+.close-button:hover {
+    background-color: #bbb; /* Etwas dunkler beim Hover */
+    color: #fff; /* Weißes "X" beim Hover */
+}
+
+/* Spezifisches Styling für den Close-Button im Chart Overlay */
+.chart-overlay .close-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #ccc;
+    color: #fff;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 24px;
+    line-height: 35px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    z-index: 1001;
+}
+
+.chart-overlay .close-button:hover {
+    background-color: #555;
+}
+
+
+
+
+/* Allgemeines Styling für das Dropdown-Menü */
+.month-dropdown {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px; /* Abstand zwischen Dropdown und Pfeilen */
+    font-size: 16px;
+}
+
+/* Styling des Dropdowns */
+#month-selector {
+    appearance: none; /* Entfernt Standard-Browser-Stil */
+    padding: 10px 15px;
+    font-size: 16px;
+    font-weight: 500;
+    background-color: #f0f0f0; /* iOS-ähnliches Grau */
+    border: none;
+    border-radius: 20px; /* Abgerundete Kanten */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Leichter Schatten */
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Hover- und Fokus-Effekte */
+#month-selector:hover,
+#month-selector:focus {
+    background-color: #e0e0e0; /* Etwas dunkleres Grau */
+    outline: none; /* Entfernt Fokusrahmen */
+}
+
+/* Styling der Pfeile */
+.month-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #007aff; /* iOS-Blau */
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 50%; /* Kreisförmig */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Leichter Schatten */
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Hover-Effekt für Pfeile */
+.month-arrow:hover {
+    background-color: #005bb5; /* Dunkleres Blau */
+    transform: scale(1.1); /* Leichte Vergrößerung */
+}
+
+/* Animation beim Klicken */
+.month-arrow:active {
+    transform: scale(0.9); /* Leichte Verkleinerung */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Reduzierter Schatten */
+}
+
+
+
+.scroll-to-top {
+    position: fixed;
+    bottom: 10px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    color: #333;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    z-index: 1200;
+}
+
+.scroll-to-top:hover {
+    background-color: #e0e0e0;
+    border-color: #bbb;
+}
+
+.scroll-to-top.visible {
+    opacity: 0.7;
+    transform: translateY(0);
+}
+
+/* Desktop: Positionierung relativ zum Menü */
+@media (min-width: 1024px) {
+    .scroll-to-top {
+        right: calc(13% + 20px);
+    }
+}
+
+
+/* Such-Overlay: Vollbild, zentriert und mit sanfter Einblendung */
+.search-overlay {
+    display: none; /* standardmäßig versteckt */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* halbtransparenter dunkler Hintergrund */
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    transition: opacity 0.3s ease;
+}
+
+/* Modal: Weißer Hintergrund, abgerundet und mit Schatten */
+.search-modal {
+    background: #fff;
+    border-radius: 10px;
+    padding: 50px 10px 20px 10px;
+    width: 80%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.3s ease-out;
+    
+}
+
+/* Animation für das Modal */
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Eingabefeld: modern und responsiv */
+.search-modal input[type="text"] {
+    width: 95%;
+    padding: 12px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    top: 20px;
+    transition: border-color 0.3s;
+}
+
+.search-modal input[type="text"]:focus {
+    border-color: #007BFF;
+}
+
+/* Schließen-Button: oben rechts positioniert */
+.search-overlay .close-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #ccc;
+    color: #fff;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 24px;
+    line-height: 35px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    z-index: 1001;
+}
+
+.search-overlay .close-button:hover {
+    background-color: #555;
+}
+
+/* Suchergebnisse: schön abgesetzt und scrollbar */
+.search-results {
+    max-height: 300px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ccc;
+    color: #000;
+    border-radius: 5px;
+}
+
+.search-results div {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.search-results div:hover {
+    background: #f0f0f0;
+}
+
+/* Anpassung für mobile Geräte */
+@media (max-width: 768px) {
+    .search-modal {
+        width: 90% !important;
+        border-radius: 10px;
+        /* Erhöhtes Padding, damit der Close-Button nicht überlappt */
+        padding: 50px 10px 20px 10px;
+    }
+    .search-modal input[type="text"] {
+        width: 92%;         /* Eingabefeld nimmt 90% der Breite ein */
+        margin: 20px auto;   /* Zentriert das Eingabefeld */
+        display: block;
+        border-radius: 10px; /* Abgerundete Ecken */
+    }
+    .search-overlay .close-button {
+        top: 20px;
+        right: 20px;
+    }
+}
+
+
+
+
+
+/* Allgemeine Stile für die Bulk-Aktion-Container */
+.bulk-action-container {
+    position: fixed;
+    bottom: 400px; /* Startpunkt oberhalb des Plus-Buttons */
+    right: 20px; /* Gleiche Ausrichtung wie der Plus-Button */
+    display: flex;
+    flex-direction: column; /* Vertikale Anordnung */
+    gap: 10px; /* Abstand zwischen den Buttons */
+    z-index: 1000;
+}
+
+.bulk-action-container.hidden {
+    display: none;
+}
+
+/* Desktop: Positionierung relativ zum Menü, aber mit festem vertikalen Abstand */
+@media (min-width: 1024px) {
+    .bulk-action-container {
+        position: fixed; /* oder absolute, falls passend */
+        right: calc(13% + 20px);
+        bottom: 400px; /* fester Abstand */
+    }
+}
+
+
+
+/* Allgemeine Button-Stile */
+.bulk-button {
+    display: flex; /* Flexbox für präzise Zentrierung */
+    align-items: center; /* Vertikale Zentrierung */
+    justify-content: center; /* Horizontale Zentrierung */
+    color: white;
+    font-size: 20px; /* Etwas kleinere Schriftgröße */
+    border: none;
+    border-radius: 50%; /* Gleiche runde Form */
+    width: 50px; /* Gleiche Breite wie der Plus-Button */
+    height: 50px; /* Gleiche Höhe wie der Plus-Button */
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Gleicher Schatten wie beim Plus-Button */
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.bulk-button:hover {
+    transform: scale(1.1); /* Leichte Vergrößerung beim Hover */
+}
+
+/* Löschen-Button in Rot */
+#bulk-delete {
+    background-color: #ff4d4d; /* Leichtes Rot */
+}
+
+#bulk-delete:hover {
+    background-color: #cc0000; /* Dunkleres Rot beim Hover */
+}
+
+/* Abbrechen-Button in Grau */
+#bulk-cancel {
+    background-color: #b3b3b3; /* Grau */
+}
+
+#bulk-cancel:hover {
+    background-color: #808080; /* Dunkleres Grau beim Hover */
+}
+
+/* Stile für andere Buttons (Standard Blau) */
+.bulk-button:not(#bulk-delete):not(#bulk-cancel) {
+    background-color: #007aff; /* Standard Blau */
+}
+
+.bulk-button:not(#bulk-delete):not(#bulk-cancel):hover {
+    background-color: #005bb5; /* Dunkleres Blau beim Hover */
+}
+
+/* Icon-Größe */
+.bulk-button i {
+    pointer-events: none;
+    font-size: 24px; /* Gleiche Icon-Größe wie beim Plus-Button */
+}
+
+
+
+.entry-box.selected {
+    border: 2px solid #007BFF;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+        /* Reduzierte Höhe für die Eintragsboxen */
+        .entry-box {
+            position: relative;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 15px; /* Kleinere Schriftgröße */
+            line-height: 1.2; /* Reduzierter Zeilenabstand */
+        }
+
+
+/* Bereich für die Gesamtsumme fixieren */
+.total-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #f8f9fa;
+    border-top: 1px solid #ddd;
+    padding: 5px;           /* Verringerter Padding-Wert */
+    text-align: center;
+    font-size: 15px;        /* Kleinere Schriftgröße */
+    line-height: 1.1;       /* Angepasste Zeilenhöhe */
+    font-weight: bold;
+    z-index:1000;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+
+        .month-navigation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .month-navigation a {
+            color: #007aff;
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 0 15px;
+            transition: transform 0.2s ease;
+        }
+
+        .month-navigation a:hover {
+            transform: scale(1.2);
+        }
+
+        .month-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 10px;
+            text-align: center;
+            color: #1d1d1f;
+        }
+
+
+        .container {
+            padding: 20px;
+            max-width: 800px; /* Maximale Breite der Inhalte */
+            margin: 0 auto; /* Zentriert die Inhalte */
+            text-align: center;
+            touch-action: pan-y; /* Ermöglicht vertikales Scrollen, aber Swipe wird erkannt */
+            overflow: hidden;
+
+        }
+
+.menu-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #007aff;
+    color: white;
+    padding: 10px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* Beide Seiten sollen gleich breit sein */
+.search-container,
+.burger-menu {
+    width: 40px;  /* gleiche feste Breite */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menu-title {
+    flex-grow: 1;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.burger-menu {
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.burger-menu:hover {
+    color: #005bb5;
+}
+
+.menu-links {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 60%; /* Standardbreite */
+    height: 100%;
+    background-color: #333;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    padding-top: 60px;
+    transition: 0.3s;
+    z-index: 950;
+}
+
+.menu-links a {
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    display: block;
+    transition: 0.3s;
+}
+
+.menu-links a:hover {
+    background-color: #444;
+}
+
+/* Anpassung für größere Bildschirme */
+@media (min-width: 1024px) {
+    .menu-links {
+        width: 13%; /* Reduzierte Breite */
+    }
+}
+
+
+        .add-button {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            background-color: #007aff;
+            color: white;
+            font-size: 24px;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+@media (min-width: 1024px) {
+    .add-button {
+        right: 320px; /* Verschiebt den Button weiter nach links auf größeren Bildschirmen */
+    }
+}
+
+
+        .add-button:hover {
+            background-color: #005bb5;
+        }
+
+</style>

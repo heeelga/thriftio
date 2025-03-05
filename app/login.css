@@ -1,0 +1,143 @@
+/* Hintergrund für Desktop-Clients */
+@media (min-width: 768px) {
+  html, body {
+    background: url(/images/login.png) no-repeat center center fixed; 
+    -webkit-background-size: cover; /* Hintergrundbild bildschirmfüllend strecken */
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    height: 100%;
+    overflow: hidden!important; 
+  }
+}
+
+/* Hintergrund für mobile Endgeräte */
+@media (max-width: 767px) {
+  html, body {
+    height: 100%;
+    overscroll-behavior: none;
+    overflow: hidden!important; 
+    position: relative;
+    background: url(/images/login.png) no-repeat fixed;
+    background-size: cover; /* Optional: Bild auch hier strecken, falls benötigt */
+    background-position: center; /* Bild zentrieren */
+  }
+}
+
+   
+.login-form h2 {
+  margin-bottom: 20px;
+  color: #ffffff;
+  font-size: 2.5rem; /* Größe der Schrift */
+  font-weight: bold; /* Optional: Schrift dicker darstellen */
+  text-align: center; /* Optional: Zentrierung */
+}
+
+
+   .rounded-box-green {
+      background-color: #007aff;
+      color: #ffffff;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .login-form h2 {
+      margin-bottom: 20px;
+      color: #ffffff;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+input[type="text"],
+input[type="password"] {
+  padding: 15px; /* Vergrößert die Innenabstände */
+  border-radius: 45px; /* Rundet die Ecken stärker ab */
+  border: none;
+  background-color: #f7f7f7;
+  font-size: 1.5rem; /* Vergrößert die Schriftgröße */
+  width: 100%; /* Nutzt die verfügbare Breite innerhalb des Containers */
+  max-width: 400px; /* Begrenzung der maximalen Breite auf größeren Bildschirmen */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Optional: leichtes Schatten für Eleganz */
+  margin: 10px auto; /* Zentriert die Felder durch automatische Ränder */
+  display: block; /* Stellt sicher, dass die Felder als Blockelemente behandelt werden */
+}
+
+/* Container für zentrierte Darstellung */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 90%; /* Auf mobilen Geräten 90% der Breite nutzen */
+  max-width: 400px; /* Begrenzung auf größeren Bildschirmen */
+  margin: 0 auto; /* Zentriert den gesamten Container */
+  padding: 20px;
+
+  /* Hintergrundeffekte */
+  background: rgba(255, 255, 255, 0.2); /* Transparenter weißer Hintergrund */
+  border-radius: 15px; /* Abgerundete Ecken */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* Tieferer Schatten für mehr Kontrast */
+}
+
+/* Stil für den inneren Container mit zusätzlichen Details */
+.form-container {
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.3); /* Leicht transparentes Inneres */
+  border-radius: 10px; /* Abgerundete Ecken */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25); /* Schatteneffekt */
+  width: 100%; /* Innerer Container nutzt die volle Breite */
+}
+
+
+
+    .login-button {
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      background-color: #007aff;
+      color: #ffffff;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .login-button:hover {
+      background-color: #007aff;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .form-container {
+      padding: 40px;
+      background-color: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px); /* Hintergrund blurren (stärkerer Effekt) */
+      border-radius: 5px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      width: 400px;
+      max-width: 100%;
+    }
+
+    .forgot-password {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
+
+    .forgot-password a {
+      color: #007aff;
+      text-decoration: none;
+    }
