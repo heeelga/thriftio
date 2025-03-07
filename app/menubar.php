@@ -199,8 +199,6 @@ if ($result->num_rows > 0) {
   <?php if ($isAdmin) { ?>
     <a href="admin.php"><?php echo $translations['admin']; ?></a>
   <?php } ?>
-  <!-- <a href="invite.php"><?php echo $translations['invite']; ?></a> -->
-  <a href="#" id="suggestions-link"><?php echo $translations['make_suggestion']; ?></a>
   <a href="logout.php">Logout</a>
 
   <!-- Gemeinsame Action-Elemente, z.B. Theme Toggle -->
