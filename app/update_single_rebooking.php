@@ -25,99 +25,116 @@ try {
     $source_table = ($source_account === 'main') ? $username : $username . "_" . $source_account;
     $target_table = ($target_account === 'main') ? $username : $username . "_" . $target_account;
 
-    // Prüfen, ob quell-/zielkonto identisch
+    // Prüfen, ob Quell-/Zielkonto identisch
     if ($source_account === $target_account) {
         echo json_encode(["success" => false, "message" => "Ursprungskonto und Zielkonto dürfen nicht identisch sein."]);
         exit;
     }
 
-    // Prüfen, ob ein Override für diese Kombination existiert
-    $checkOverride = $pdo->prepare("
-        SELECT id 
-        FROM `$source_table` 
-        WHERE override = 1 
-          AND override_id = ? 
-          AND entry_month = ? 
+    // ======================
+    // 1) Override im Source-Konto checken
+    // ======================
+    $checkOverrideSource = $pdo->prepare("
+        SELECT id
+        FROM `$source_table`
+        WHERE override = 1
+          AND override_id = ?
+          AND entry_month = ?
           AND entry_year = ?
     ");
-    $checkOverride->execute([$id, $entry_month, $entry_year]);
-    $existingOverride = $checkOverride->fetch(PDO::FETCH_ASSOC);
+    $checkOverrideSource->execute([$id, $entry_month, $entry_year]);
+    $existingOverrideSource = $checkOverrideSource->fetch(PDO::FETCH_ASSOC);
 
-    if ($existingOverride) {
-        // Override im Ursprungskonto aktualisieren
+    if ($existingOverrideSource) {
+        // Update
         $updateOverride = $pdo->prepare("
-            UPDATE `$source_table` 
+            UPDATE `$source_table`
             SET amount = ?, description = ?, entry_month = ?, entry_year = ?, rebooking_partner = ?
             WHERE id = ?
         ");
         $updateOverride->execute([
-            $amount, 
-            $description, 
-            $entry_month, 
-            $entry_year, 
-            $target_account, 
-            $existingOverride['id']
+            $amount,
+            $description,
+            $entry_month,
+            $entry_year,
+            $target_account,
+            $existingOverrideSource['id']
         ]);
-
-        // Override im Zielkonto aktualisieren
-        $updateTargetOverride = $pdo->prepare("
-            UPDATE `$target_table` 
-            SET amount = ?, description = ?, entry_month = ?, entry_year = ?, rebooking_partner = ?
-            WHERE override = 1 
-              AND override_id = ?
-        ");
-        $updateTargetOverride->execute([
-            $amount, 
-            $description, 
-            $entry_month, 
-            $entry_year, 
-            $source_account, 
-            $id
-        ]);
-
     } else {
-        // Neues Override im Ursprungskonto erstellen
+        // Neu anlegen
         $createOverride = $pdo->prepare("
             INSERT INTO `$source_table` (
-                type, amount, description, entry_month, entry_year, rebooking_id, rebooking_partner, override, override_id
+                type, amount, description, entry_month, entry_year, 
+                rebooking_id, rebooking_partner, override, override_id
             ) VALUES (
                 'expense', ?, ?, ?, ?, ?, ?, 1, ?
             )
         ");
         $createOverride->execute([
-            $amount, 
-            $description, 
-            $entry_month, 
-            $entry_year, 
-            $id, 
+            $amount,
+            $description,
+            $entry_month,
+            $entry_year,
+            $id, // rebooking_id
             $target_account, 
-            $id
+            $id  // override_id
         ]);
+    }
 
-        // Neues Override im Zielkonto erstellen
+    // ======================
+    // 2) Override im Target-Konto checken
+    // ======================
+    $checkOverrideTarget = $pdo->prepare("
+        SELECT id
+        FROM `$target_table`
+        WHERE override = 1
+          AND override_id = ?
+          AND entry_month = ?
+          AND entry_year = ?
+    ");
+    $checkOverrideTarget->execute([$id, $entry_month, $entry_year]);
+    $existingOverrideTarget = $checkOverrideTarget->fetch(PDO::FETCH_ASSOC);
+
+    if ($existingOverrideTarget) {
+        // Update
+        $updateTargetOverride = $pdo->prepare("
+            UPDATE `$target_table`
+            SET amount = ?, description = ?, entry_month = ?, entry_year = ?, rebooking_partner = ?
+            WHERE id = ?
+        ");
+        $updateTargetOverride->execute([
+            $amount,
+            $description,
+            $entry_month,
+            $entry_year,
+            $source_account,
+            $existingOverrideTarget['id']
+        ]);
+    } else {
+        // Neu anlegen
         $createTargetOverride = $pdo->prepare("
             INSERT INTO `$target_table` (
-                type, amount, description, entry_month, entry_year, rebooking_id, rebooking_partner, override, override_id
+                type, amount, description, entry_month, entry_year, 
+                rebooking_id, rebooking_partner, override, override_id
             ) VALUES (
                 'income', ?, ?, ?, ?, ?, ?, 1, ?
             )
         ");
         $createTargetOverride->execute([
-            $amount, 
-            $description, 
-            $entry_month, 
-            $entry_year, 
-            $id, 
-            $source_account, 
-            $id
+            $amount,
+            $description,
+            $entry_month,
+            $entry_year,
+            $id, // rebooking_id
+            $source_account,
+            $id  // override_id
         ]);
     }
 
-    // KEIN Redirect mehr, sondern JSON-Antwort:
     echo json_encode(["success" => true, "message" => "Einzel-Umbuchung erfolgreich aktualisiert."]);
     exit;
+
 } catch (PDOException $e) {
-    // Auf Fehler reagieren, Debug in Datei schreiben
     file_put_contents('debug_log.txt', "PDOException: " . $e->getMessage() . PHP_EOL, FILE_APPEND);
     echo json_encode(["success" => false, "message" => "Fehler beim Aktualisieren der Umbuchung: " . $e->getMessage()]);
     exit;
